@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Parano - GNOME HashFile Frontend
-# Copyright (C) 2004-2005 Gautier Portet <kassoulet@gmail.com>
+# Copyright (C) 2005 Gautier Portet <kassoulet@gmail.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,33 +21,35 @@ PACKAGE="Parano"
 VERSION="0.2"
 URL="http://parano.berlios.de"
 
-import os
-import sys
-import pdb
-import time
-import string
-import re
+import os, sys , time, string, re
 import thread
-import md5
-import zlib
+import md5, zlib
 import pygtk
 pygtk.require('2.0')
-import gobject
-import gtk
-import gtk.glade
-import gnome
+import gobject, gtk, gtk.glade, gnome, gnome.ui
+import cStringIO, traceback
+import urllib
 import gettext
 _=gettext.gettext
 
+def gtk_iteration():
+	while gtk.events_pending():
+		gtk.main_iteration(gtk.FALSE)
+
+def auto_connect(object, dialog):
+	for w in dialog.get_widget_prefix(''):
+		name = w.get_name()
+		assert not hasattr(object, name), name
+		setattr(object, name, w)
+
 COLUMN_ICON=0
-#COLUMN_HASH=1
 COLUMN_FILE=1
 
 BUFFER_SIZE=1024*64
 
 HASH_NOT_CHECKED=0	# hash not checked yet
 HASH_OK=1			# hash is as excepted
-HASH_ERROR=2			# cannot check hash
+HASH_ERROR=2		# cannot check hash
 HASH_DIFFERENT=3 	# hash is not what expected: file corrupted !
 
 icons = {
@@ -56,12 +58,11 @@ icons = {
 	HASH_ERROR		: gtk.STOCK_DIALOG_WARNING,
 	HASH_DIFFERENT	: gtk.STOCK_NO,
 }
+
 class File:
 	# File contained in hash file
 	def __init__(self, displayed_name="", filename="", expected_hash="", size=0):
-		# the displayed name
 		self.displayed_name=displayed_name
-		# the filename
 		self.filename=filename
 		# the Hash loaded from file
 		self.expected_hash=expected_hash
@@ -69,7 +70,6 @@ class File:
 		self.real_hash=""
 		# the file size
 		self.size=size
-		# sum status
 		self.status=HASH_NOT_CHECKED
 
 		if not size:
@@ -78,11 +78,6 @@ class File:
 			except OSError:
 				print _("Warning: cannot get size of file '%s'") % filename
 				self.size = 0;
-
-
-def gtk_iteration():
-	while gtk.events_pending():
-		gtk.main_iteration(gtk.FALSE)
 
 class HasherMD5:
 	def init(self):
@@ -102,7 +97,7 @@ class HasherCRC32:
 		self.crc = zlib.crc32(data,self.crc)
 		
 	def get_hash(self):
-		return "%8X" % self.crc
+		return "%08X" % self.crc
 
 class FormatBase:
 	def detect_file(self, f):
@@ -143,7 +138,7 @@ class FormatMD5 (FormatBase):
 		self.filename_regex = re.compile(r".*\.md5(sum)?")
 		self.hasher = HasherMD5()
 
-		self.regex_reader = re.compile(r";.*|^(?P<hash>[\dA-Fa-f]{32}) \*?(?P<file>.*$)|^\s*$")
+		self.regex_reader = re.compile(r";.*|#.*|^(?P<hash>[\dA-Fa-f]{32}) \*?(?P<file>.*$)|^\s*$")
 		self.format_writer = "%(hash)s *%(file)s\n"
 		self.format_comment= "; %s\n"
 
@@ -167,7 +162,7 @@ class Parano:
 		try:
 			f = open(filename, 'rb');
 		except IOError:
-			print "HASHING ERROR", filename
+			print _("Cannot read file: "), filename
 			return ""
 		
 		hasher = self.format.hasher
@@ -295,11 +290,13 @@ class Parano:
 
 	def on_update_hash_pause(self, widget):
 		self.paused = not self.paused
+		label_filename = self.progress_dialog.get_widget("label_filename")
+		progressbar = self.progress_dialog.get_widget("progressbar")
 		if self.paused:
-			self.progress_dialog.get_widget("label_filename").set_markup(_("<i>%s (Paused)</i>") % self.current_file)
-			self.progress_dialog.get_widget("progressbar").set_text(_("Paused"))
+			label_filename.set_markup(_("<i>%s (Paused)</i>") % self.current_file)
+			progressbar.set_text(_("Paused"))
 		else:
-			self.progress_dialog.get_widget("label_filename").set_markup("<i>%s</i>" % self.current_file)
+			label_filename.set_markup("<i>%s</i>" % self.current_file)
 
 
 	def thread_update_hash(self):
@@ -338,17 +335,19 @@ class Parano:
 
 	def update_hashfile(self):
 
-		self.progress_dialog = gtk.glade.XML("parano.glade","hashing_progress")
-		progress = self.progress_dialog_dlg = self.progress_dialog.get_widget("hashing_progress")
+		self.progress_dialog = dialog = gtk.glade.XML("parano.glade","hashing_progress")
+		progress = self.progress_dialog_dlg = dialog.get_widget("hashing_progress")
+		self.window_main.set_sensitive(False)
+		progress.set_transient_for(self.window_main)
 
 		events = { 
 					"on_button_cancel_clicked" : self.on_update_hash_cancel,
 					"on_button_pause_clicked" : self.on_update_hash_pause 
-				}
-		self.progress_dialog.signal_autoconnect(events)
-		progressbar = self.progress_dialog.get_widget("progressbar")
-		progresslabel = self.progress_dialog.get_widget("label_filename")
-		progressfiles = self.progress_dialog.get_widget("label_files")
+		}
+		dialog.signal_autoconnect(events)
+		progressbar = dialog.get_widget("progressbar")
+		progresslabel = dialog.get_widget("label_filename")
+		progressfiles = dialog.get_widget("label_files")
 
 		progresslabel.set_markup("")
 		progress.show()	
@@ -362,10 +361,10 @@ class Parano:
 		self.progress_file=0
 		self.current_file=""
 
-		self.progress_total_bytes=666
+		self.progress_total_bytes=1L
 		for f in self.files:
 			self.progress_total_bytes=self.progress_total_bytes+f.size
-		self.progress_current_bytes=0
+		self.progress_current_bytes=0L
 
 		start=time.time()
 		total = self.progress_total_bytes
@@ -396,6 +395,7 @@ class Parano:
 
 		self.update_file_list()  
 		progress.hide_all()	
+		self.window_main.set_sensitive(True)
 
 	def update_file_list(self):  
 		self.liststore.clear()
@@ -404,22 +404,21 @@ class Parano:
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 
-
 	def on_quit_activate(self, widget):
-		if not self.on_event_delete(widget):
+		if not self.on_delete_event(widget):
 			gtk.main_quit()
 
-	def on_event_delete(self, widget, event=None, data=None):
+	def on_delete_event(self, widget, event=None, data=None):
 		# Change FALSE to TRUE and the main window will not be destroyed
 		# with a "delete_event".
-		if self.modified:
+		if self.modified and len(self.files)>0:
 			dialog = gtk.glade.XML("parano.glade","dialog_save_before_closing")\
 						.get_widget("dialog_save_before_closing")
 			result = dialog.run()
 			dialog.hide_all()
 			if result == gtk.RESPONSE_OK:
 				# save
-				self.on_save_md5_activate(widget)
+				self.on_save_hashfile_activate(widget)
 				return gtk.TRUE
 			if result == gtk.RESPONSE_CANCEL:
 				# cancel
@@ -435,7 +434,10 @@ class Parano:
 		
 	def on_about_activate(self, widget):
 		# about dialog
-		self.about_dialog = gtk.glade.XML("parano.glade","dialog_about")
+		about_dialog = gtk.glade.XML("parano.glade","dialog_about")
+		dialog = about_dialog.get_widget("dialog_about")
+		dialog.set_property("name",PACKAGE)
+		dialog.set_property("version",VERSION)
 
 	def on_new_hashfile_activate(self, widget):
 		# new_hashfile
@@ -452,10 +454,6 @@ class Parano:
 			filter.add_pattern(format.filename_pattern)
 
 		dialog.set_filter(filter)
-
-		#hash = gtk.CheckButton(_("Calculate hash automatically"))
-		#hash.show ()
-		#self.addfolder_dialog.get_widget("filechooserdialog_addfolder").set_extra_widget(hash)
 
 		result = dialog.run()
 		dialog.hide_all()
@@ -507,8 +505,6 @@ class Parano:
 			for f in dialog.get_filenames():
 				self.add_file(File(f,f))
 	
-		#self.update_md5()
-	
 		self.update_file_list()
 		dialog.hide_all()
 		self.modified=True
@@ -520,16 +516,16 @@ class Parano:
 
 		dialog = self.addfolder_dialog_dlg = self.addfolder_dialog.get_widget("filechooserdialog_addfolder")
 
-		hash = gtk.CheckButton(_("Calculate hash automatically"))
-		hash.show ()
-		self.addfolder_dialog.get_widget("filechooserdialog_addfolder").set_extra_widget(hash)
-		
 		result = dialog.run()
-		
 		dialog.hide_all()
-		
 		gtk_iteration()
-		
+	
+		if result == gtk.RESPONSE_OK:
+			self.add_folder(dialog.get_filename())
+			
+		gtk_iteration()
+
+	def add_folder(self, folder):
 		self.progress_dialog = gtk.glade.XML("parano.glade","addfolder_progress")
 		
 		events = { "on_button_cancel_clicked" : self.on_addfolder_cancel }
@@ -540,6 +536,8 @@ class Parano:
 		progressbar = self.progress_dialog.get_widget("progressbar")
 		progresslabel = self.progress_dialog.get_widget("label_folder")
 
+		progress.set_transient_for(self.window_main)
+		
 		self.abort=False
 		progress.show()	
 		gtk_iteration()
@@ -547,30 +545,21 @@ class Parano:
 		
 		# save current files list
 		backup = self.files[:]
-		
 		t=0
-		if result == gtk.RESPONSE_OK:
-			for root, dirs, files in os.walk(dialog.get_filename()):
-				if time.time()-t >= 0.1:
-					t = time.time()
-					progresslabel.set_markup("<small><i>%s</i></small>" % root)
-					progressbar.pulse()
-				gtk_iteration()
-				for name in files:
-					f = os.path.join(root, name)
-					self.add_file(File(f,f))
-					if self.abort:
-						break
+		for root, dirs, files in os.walk(folder):
+			if time.time()-t >= 0.1:
+				t = time.time()
+				progresslabel.set_markup("<small><i>%s</i></small>" % root)
+				progressbar.pulse()
+			gtk_iteration()
+			for name in files:
+				f = os.path.join(root, name)
+				self.add_file(File(f,f))
 				if self.abort:
 					break
-		
-		
-		progress.hide_all()	
-					
-		#if not self.abort:
-			#self.update_md5()
+			if self.abort:
+				break
 	
-		gtk_iteration()
 		if not self.abort:
 			self.modified=True
 			self.update_ui()
@@ -578,6 +567,7 @@ class Parano:
 		if self.abort:
 			# restore original file list
 			self.files = backup
+		progress.hide_all()	
 
 	def on_remove_activate(self, widget):
 		
@@ -601,32 +591,19 @@ class Parano:
 
 	def init_window(self):
 		# main window
-		self.window_main_xml = gtk.glade.XML("parano.glade","window_parano")
-		events = { 
-				"on_about_activate" : self.on_about_activate,
-				"on_addfile_activate" : self.on_addfile_activate,
-				"on_addfolder_activate" : self.on_addfolder_activate,
-				"on_remove_activate" : self.on_remove_activate,
-				"on_new_hashfile_activate" : self.on_new_hashfile_activate,
-				"on_load_hashfile_activate" : self.on_load_hashfile_activate,
-				"on_save_hashfile_activate" : self.on_save_hashfile_activate,
-				"on_save_as_hashfile_activate" : self.on_save_as_hashfile_activate,
-				"on_refresh" : self.on_refresh,
-				"on_quit_activate" : self.on_quit_activate,
-				"on_destroy" : self.on_destroy,
-				"on_delete_event" : self.on_event_delete 
-				}
-		self.window_main_xml.signal_autoconnect(events)
+		window = gtk.glade.XML("parano.glade","window_main")
+		window.signal_autoconnect(self)
+		auto_connect(self, window)
 
-		self.window_main = self.window_main_xml.get_widget("window_parano")
-
-		self.filelist = filelist = self.window_main_xml.get_widget("filelist")
+		self.filelist = filelist = window.get_widget("filelist")
 		filelist.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 		
 		renderer = gtk.CellRendererPixbuf()
 		renderer.set_property("stock-id", gtk.STOCK_MISSING_IMAGE)
 		column = gtk.TreeViewColumn("Status", renderer)
 		column.set_sort_column_id(COLUMN_ICON)
+		column.set_sort_indicator(True)
+		column.set_sort_order(gtk.SORT_ASCENDING)
 		column.add_attribute(renderer, "stock_id", COLUMN_ICON)
 		
 		#filelist.append_column(column)
@@ -648,42 +625,88 @@ class Parano:
 		self.liststore = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING)
 		filelist.set_model(self.liststore)
 	
+		filelist.drag_dest_set(gtk.DEST_DEFAULT_ALL,[
+			('text/uri-list',0,0),
+			('text/plain',0,0),
+			('STRING',0,0)],
+			gtk.gdk.ACTION_COPY|gtk.gdk.ACTION_MOVE)
 
-	def __init__(self, initial_files=""):
+	def on_filelist_drag_data_received(self, widget, drag_context, x, y, selection_data, info, timestamp):
+		
+		files = selection_data.data.split()
+		drag_context.drop_finish(True, timestamp)
+		
+		for f in files:
+		
+			f = urllib.unquote(f)
+			# remove "file://"	
+			result = re.search(r"file:(//)?(.*)", f)
+			if result:
+				f = result.group(2)
+			# remove trailing noise
+			f = f.strip("\r\n\x00",)
+			# and add the file
+			if os.path.isfile(f):
+				self.add_file(File(f,f))
+			elif os.path.isdir(f):
+				self.add_folder(f)
+			elif f: # TODO: error
+				print _("skipping dropped uri: %s") % repr(f)
+		
+		self.modified=True
+		self.update_ui()
+
+	def __init__(self, initial_files=[]):
 		self.init_window()		
 		self.new_hashfile()
 
-		number_hashfile=0
-
+		if len(initial_files) == 1:
+			# load hash file
+			filename = initial_files[0]
+			for format in formats:
+				regex = format.filename_regex
+				result = regex.search(filename)
+				if result:
+					self.format = format
+					print "Loading hashfile, detected format: %s" % format.name
+					self.load_hashfile(filename)
+					initial_files=[]
+					self.filename=""
+					break
+		
 		for f in initial_files:
-			lower = string.lower(f)
-			# TODO: fix this
-			if string.rfind(lower,".md5") != -1:
-				print "loading md5:", f
-				self.load_hashfile(f)
-				number_hashfile=number_hashfile+1
-			else:
-				self.add_file(f)
-				
-		if number_hashfile>1:
-			self.filename=""
+			self.add_file(File(f,f))
 			
 		self.update_title()
 		self.modified=False
 		self.update_file_list()
-		if number_hashfile>0:
-			self.update_hashfile()
 
-								
 	def main(self):
 		gtk.main()
+	
+def excepthook(type, value, tb):
+	trace = cStringIO.StringIO()
+	traceback.print_exception(type, value, tb, None, trace)
+	print trace.getvalue()
+	message = _(
+	"<big><b>A programming error has been detected during the execution of this program.</b></big>"
+	"\n\n<tt><small>%s</small></tt>") % trace.getvalue()
+	dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
+		gtk.BUTTONS_OK, message)
+	dialog.set_title(_("Bug Detected"))
+	dialog.set_markup(message)
+	dialog.run()
+	dialog.hide()
+	sys.exit(1)
 
 if __name__ == "__main__":
+
+	sys.excepthook = excepthook
 
 	# (longName, shortName, type , default, flags, descrip , argDescrip)
 	table=[]
 
-	gnome.init("Parano", "0.1", gnome.libgnome_module_info_get()) 
+	gnome.init(PACKAGE, VERSION, gnome.libgnome_module_info_get()) 
 	
 	leftover, argdict = gnome.popt_parse(sys.argv, table)
 	
