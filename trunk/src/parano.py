@@ -17,11 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-PACKAGE="Parano"
-VERSION="0.2.0"
+NAME="Parano"
+VERSION="@version@"
+DATADIR="@datadir@"
 URL="http://parano.berlios.de"
 
-DATADIR="@datadir@"
 
 import os, sys , time, string, re
 import thread
@@ -801,6 +801,7 @@ if __name__ == "__main__":
 	if argdict["quiet"]: option_quiet = True
 		
 	log( NAME +" "+ VERSION)
+	log(DATADIR)
 
 	parano = Parano(leftover)
 	parano.main()

@@ -13,5 +13,5 @@ EXTRA_DIST = parano.gladep parano.py
 CLEANFILES = parano
 
 parano: parano.py
-	sed -e s!\@datadir\@!$(gladedir)! < $< > $@
+	sed -e s!\@datadir\@!$(gladedir)! -e s!\@version\@!$(VERSION)! < $< > $@
 	chmod +x $@

@@ -991,7 +991,7 @@
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="logo">parano.png</property>
-  <property name="copyright" translatable="yes">©2005 Gautier Portet</property>
+  <property name="copyright">©2005 Gautier Portet</property>
   <property name="comments" translatable="yes">GNOME HashFile Manager </property>
   <property name="authors">Gautier Portet &lt;kassoulet@users.berlios.de&gt;</property>
   <property name="translator_credits" translatable="yes">translator_credits</property>

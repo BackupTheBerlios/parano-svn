@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-10-31 17:29+0100\n"
+"POT-Creation-Date: 2005-03-03 01:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,172 +16,207 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/parano.py:145
+#: ../src/parano.py:100
 #, python-format
-msgid ""
-"Cannot read %s\n"
-"It's maybe not a MD5 sum file"
+msgid "Warning: cannot get size of file '%s'"
 msgstr ""
 
-#: src/parano.py:198
-msgid "Untitled MD5"
+#: ../src/parano.py:188
+msgid "Cannot read file: "
 msgstr ""
 
-#: src/parano.py:200
+#: ../src/parano.py:292
+msgid "Cannot store a md5 file in the hashed tree"
+msgstr ""
+
+#: ../src/parano.py:326
+msgid "Untitled Hashfile"
+msgstr ""
+
+#: ../src/parano.py:328
 #, python-format
 msgid "%s (Unsaved)"
 msgstr ""
 
-#: src/parano.py:211
+#: ../src/parano.py:341
 #, python-format
 msgid "<i>%s (Paused)</i>"
 msgstr ""
 
-#: src/parano.py:212
+#: ../src/parano.py:342
 msgid "Paused"
 msgstr ""
 
-#: src/parano.py:294
+#: ../src/parano.py:431
 #, python-format
 msgid "(%d:%02d Remaining)"
 msgstr ""
 
-#: src/parano.py:296
+#: ../src/parano.py:433
 #, python-format
 msgid "<b>%d / %d</b>"
 msgstr ""
 
-#: src/parano.py:402
-msgid "Calculate hash automatically"
+#. TODO: error
+#: ../src/parano.py:742
+#, python-format
+msgid "skipping dropped uri: %s"
 msgstr ""
 
-#: src/parano.glade.h:1
-msgid "(c) Gautier Portet"
+#: ../src/parano.py:773
+#, python-format
+msgid ""
+"<big><b>A programming error has been detected during the execution of this "
+"program.</b></big>\n"
+"\n"
+"<tt><small>%s</small></tt>"
 msgstr ""
 
-#: src/parano.glade.h:2
+#: ../src/parano.py:777
+msgid "Bug Detected"
+msgstr ""
+
+#: ../src/parano.glade.h:1
 msgid "..."
 msgstr ""
 
-#: src/parano.glade.h:3
+#: ../src/parano.glade.h:2
 msgid "<b>1 of 1</b>"
 msgstr ""
 
-#: src/parano.glade.h:4
+#: ../src/parano.glade.h:3
 msgid "<b>Files hashed:</b>"
 msgstr ""
 
-#: src/parano.glade.h:5
+#: ../src/parano.glade.h:4
 msgid "<big><b>Adding Folder</b></big>"
 msgstr ""
 
-#: src/parano.glade.h:6
+#: ../src/parano.glade.h:5
+msgid ""
+"<big><b>Do you want to save changes ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+
+#: ../src/parano.glade.h:8
+msgid ""
+"<big><b>Overwrite file ?</b></big>\n"
+"\n"
+"The file already exists, do you want to replace it with the new one you are "
+"saving ?"
+msgstr ""
+
+#: ../src/parano.glade.h:11
 msgid ""
 "<big><b>Save changes before closing ?</b></big>\n"
 "\n"
 "if you don't save, changes will be discarded"
 msgstr ""
 
-#: src/parano.glade.h:9
+#: ../src/parano.glade.h:14
 msgid "<i>...</i>"
 msgstr ""
 
-#: src/parano.glade.h:10
+#: ../src/parano.glade.h:15
+msgid ""
+"<i>Use .md5 to save MD5 crytographic hash, or .sfv to save CRC32 hash.</i>"
+msgstr ""
+
+#: ../src/parano.glade.h:16
 msgid "<i>label8</i>"
 msgstr ""
 
-#: src/parano.glade.h:11
+#: ../src/parano.glade.h:17
 msgid "Add File"
 msgstr ""
 
-#: src/parano.glade.h:12
+#: ../src/parano.glade.h:18
 msgid "Add File(s)"
 msgstr ""
 
-#: src/parano.glade.h:13
+#: ../src/parano.glade.h:19
 msgid "Add File..."
 msgstr ""
 
-#: src/parano.glade.h:14
+#: ../src/parano.glade.h:20
 msgid "Add Folder"
 msgstr ""
 
-#: src/parano.glade.h:15
+#: ../src/parano.glade.h:21
 msgid "Add Folder..."
 msgstr ""
 
-#: src/parano.glade.h:16
+#: ../src/parano.glade.h:22
 msgid "Add all files and folders from selected folder to current MD5 file"
 msgstr ""
 
-#: src/parano.glade.h:17
+#: ../src/parano.glade.h:23
 msgid "Add some files to current MD5 file"
 msgstr ""
 
-#: src/parano.glade.h:18
+#: ../src/parano.glade.h:24
 msgid "Adding Folder"
 msgstr ""
 
-#: src/parano.glade.h:19
+#: ../src/parano.glade.h:25
+msgid ""
+"Do you want to add this file to the current hashfile or open it as a new "
+"hashfile?"
+msgstr ""
+
+#: ../src/parano.glade.h:26
 msgid "Don't save"
 msgstr ""
 
-#: src/parano.glade.h:20
-msgid "GNOME MD5 Hasher"
+#: ../src/parano.glade.h:27
+msgid "GNOME HashFile Manager "
 msgstr ""
 
-#: src/parano.glade.h:21
+#: ../src/parano.glade.h:28
 msgid "Hashing"
 msgstr ""
 
-#: src/parano.glade.h:22
-msgid "Load MD5 File"
+#: ../src/parano.glade.h:29
+msgid "Load Hash File"
 msgstr ""
 
-#: src/parano.glade.h:23
+#: ../src/parano.glade.h:30
 msgid "New File"
 msgstr ""
 
-#: src/parano.glade.h:24
+#: ../src/parano.glade.h:31
 msgid "Open File"
 msgstr ""
 
-#: src/parano.glade.h:25
-msgid "Parano [alpha]"
+#: ../src/parano.glade.h:32
+msgid "Parano"
 msgstr ""
 
-#: src/parano.glade.h:26
+#: ../src/parano.glade.h:33
 msgid "Pause"
 msgstr ""
 
-#: src/parano.glade.h:27
-msgid "Refresh"
+#: ../src/parano.glade.h:34
+msgid "Remove"
 msgstr ""
 
-#: src/parano.glade.h:28
+#: ../src/parano.glade.h:35
+msgid "Replace"
+msgstr ""
+
+#: ../src/parano.glade.h:36
 msgid "Save File"
 msgstr ""
 
-#: src/parano.glade.h:29
-msgid "Save MD5 File"
+#: ../src/parano.glade.h:37
+msgid "Save Hash File"
 msgstr ""
 
-#: src/parano.glade.h:30
-msgid "_MD5"
-msgstr ""
-
-#: src/parano.glade.h:31
+#: ../src/parano.glade.h:38
 msgid "_New"
 msgstr ""
 
-#: src/parano.glade.h:32
+#: ../src/parano.glade.h:39
 msgid "translator_credits"
-msgstr ""
-
-#: parano.schemas.in.h:1
-msgid "This demonstrates a GConf application preference."
-msgstr ""
-
-#: parano.schemas.in.h:2
-msgid "auto update"
 msgstr ""
