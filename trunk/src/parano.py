@@ -25,6 +25,7 @@ import string
 import re
 import thread
 import md5
+#import zlib
 import pygtk
 pygtk.require('2.0')
 import gobject
@@ -38,7 +39,7 @@ COLUMN_ICON=0
 COLUMN_HASH=1
 COLUMN_FILE=2
 
-BUFFER_SIZE=1024
+BUFFER_SIZE=1024*64
 
 MD5_NOT_CHECKED=0	# md5 not checked yet
 MD5_OK=1			# md5 is as excepted
@@ -53,7 +54,9 @@ icons = {
 }
 class File:
 	# File contained in MD5 collection 
-	def __init__(self, filename="", expectedMD5="", size=-1):
+	def __init__(self, displayed_name="", filename="", expectedMD5="", size=0):
+		# the displayed name
+		self.displayed_name=displayed_name
 		# the filename
 		self.filename=filename
 		# the MD5 loaded from file
@@ -64,6 +67,14 @@ class File:
 		self.size=size
 		# sum status
 		self.status=MD5_NOT_CHECKED
+
+		if not size:
+			try:
+				self.size = os.path.getsize(self.filename)
+			except OSError:
+				print _("Warning: cannot get size of file '%s'") % filename
+				self.size = 0;
+
 
 def gtk_iteration():
 	while gtk.events_pending():
@@ -80,6 +91,8 @@ class Parano:
 			return ""
 		
 		hasher = md5.new()
+		
+		#crc = zlib.crc32("")
 
 		while 1:
 			while self.paused:
@@ -91,10 +104,10 @@ class Parano:
 			if not data:
 				break
 			hasher.update(data)
+			#crc = zlib.crc32(data,crc)
 			self.progress_current_bytes=self.progress_current_bytes+BUFFER_SIZE
 
 		f.close()
-
 		return hasher.hexdigest()
 
 	def new_md5(self):
@@ -159,14 +172,14 @@ class Parano:
 				root = os.path.dirname(filename)
 				absfile = os.path.join(root, file)
 
-				files_to_add.append(File(absfile, md5))
+				files_to_add.append(File(file, absfile, md5))
 			
 		f.close()
 		
 		self.new_md5()
 		
 		for f in files_to_add:
-			self.add_file(f.filename, f.expectedMD5)
+			self.add_file(f)
 		
 		self.filename=filename
 		self.modified=False
@@ -180,6 +193,13 @@ class Parano:
 		remove = len(os.path.dirname(filename))+1
 		for ff in self.files:
 			# convert to a path relative to md5 file
+			if len(ff.filename)<remove:
+				# TODO: better error detection
+				dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, 
+							_("Cannot store a md5 file in the hashed tree"))
+				dialog.run()
+				dialog.hide_all()
+				return
 			filename = ff.filename[remove:]
 			f.write("%s *%s\n" % (ff.realMD5,filename))
 		f.close()
@@ -187,14 +207,8 @@ class Parano:
 		self.filename=filename
 		self.update_title()
 
-	def add_file(self, filename, md5=""):
+	def add_file(self, f):
 	
-		try:
-			size = os.path.getsize(filename)
-		except OSError:
-			print _("Warning: cannot get size of file '%s'") % filename
-			size = 0;
-		f = File(filename,md5,size)
 		self.files.append(f)
 
 	def update_title(self):
@@ -287,6 +301,7 @@ class Parano:
 		self.progress_current_bytes=0
 
 		start=time.time()
+		total = self.progress_total_bytes
 		thread.start_new_thread(self.thread_update_md5, ())
 		
 		while self.progress_total_bytes>0:
@@ -309,7 +324,9 @@ class Parano:
 				
 			gtk_iteration()
 			time.sleep(0.1)
-		
+
+		print (total/(time.time()-start))/(1024*1024), "MB/s"
+
 		self.update_file_list()  
 		progress.hide_all()	
 
@@ -317,7 +334,7 @@ class Parano:
 		self.liststore.clear()
 		for f in self.files:
 			iter = self.liststore.append()
-			self.liststore.set(iter, COLUMN_FILE, f.filename, COLUMN_HASH, f.realMD5)
+			self.liststore.set(iter, COLUMN_FILE, f.displayed_name, COLUMN_HASH, f.realMD5)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 
 
@@ -384,10 +401,10 @@ class Parano:
 			self.filename = dialog.get_filename()
 			
 			if os.path.exists(self.filename):
-				dialog = gtk.glade.XML("parano.glade","dialog_overwrite_file")\
+				dialog_ow = gtk.glade.XML("parano.glade","dialog_overwrite_file")\
 							.get_widget("dialog_overwrite_file")
-				result = dialog.run()
-				dialog.hide_all()
+				result = dialog_ow.run()
+				dialog_ow.hide_all()
 				if result == gtk.RESPONSE_CANCEL:
 					# cancel
 					return
@@ -404,7 +421,7 @@ class Parano:
 		result = dialog.run()
 		if result == gtk.RESPONSE_OK:
 			for f in dialog.get_filenames():
-				self.add_file(f)
+				self.add_file(File(f,f))
 	
 		self.update_md5()
 	
@@ -456,7 +473,8 @@ class Parano:
 					progressbar.pulse()
 				gtk_iteration()
 				for name in files:
-					self.add_file(os.path.join(root, name))
+					f = os.path.join(root, name)
+					self.add_file(File(f,f))
 					if self.abort:
 						break
 				if self.abort:
@@ -478,6 +496,17 @@ class Parano:
 			# restore original file list
 			self.files = backup
 
+	def on_remove_activate(self, widget):
+		
+		def cb_treelist(model, path, iter, list):
+			list.append(iter)	
+			
+		selection = self.filelist.get_selection()
+		list = []
+		selection.selected_foreach(cb_treelist, list)
+	
+		for i in list:
+			self.liststore.remove(i)
 
 	def on_addfolder_cancel(self, widget):
 		self.abort=True	
@@ -494,6 +523,7 @@ class Parano:
 				"on_about_activate" : self.on_about_activate,
 				"on_addfile_activate" : self.on_addfile_activate,
 				"on_addfolder_activate" : self.on_addfolder_activate,
+				"on_remove_activate" : self.on_remove_activate,
 				"on_new_md5_activate" : self.on_new_md5_activate,
 				"on_load_md5_activate" : self.on_load_md5_activate,
 				"on_save_md5_activate" : self.on_save_md5_activate,
@@ -507,7 +537,8 @@ class Parano:
 
 		self.window_main = self.window_main_xml.get_widget("window_parano")
 
-		filelist = self.window_main_xml.get_widget("filelist")
+		self.filelist = filelist = self.window_main_xml.get_widget("filelist")
+		filelist.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 		
 		renderer = gtk.CellRendererPixbuf()
 		renderer.set_property("stock-id", gtk.STOCK_MISSING_IMAGE)

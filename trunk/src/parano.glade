@@ -42,8 +42,7 @@
 	      <child>
 		<widget class="GtkMenuItem" id="file">
 		  <property name="visible">True</property>
-		  <property name="label" translatable="yes">_MD5</property>
-		  <property name="use_underline">True</property>
+		  <property name="stock_item">GNOMEUIINFO_MENU_FILE_TREE</property>
 
 		  <child>
 		    <widget class="GtkMenu" id="file_menu">
@@ -62,7 +61,7 @@
 			<widget class="GtkImageMenuItem" id="menu_open">
 			  <property name="visible">True</property>
 			  <property name="stock_item">GNOMEUIINFO_MENU_OPEN_ITEM</property>
-			  <signal name="activate" handler="on_open_md5_activate" last_modification_time="Tue, 12 Oct 2004 23:45:52 GMT"/>
+			  <signal name="activate" handler="on_load_md5_activate" last_modification_time="Wed, 26 Jan 2005 00:38:03 GMT"/>
 			</widget>
 		      </child>
 
@@ -117,7 +116,7 @@
 			  <signal name="activate" handler="on_addfile_activate" last_modification_time="Thu, 07 Oct 2004 15:59:32 GMT"/>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image6">
+			    <widget class="GtkImage" id="image16">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-dnd</property>
 			      <property name="icon_size">1</property>
@@ -139,7 +138,7 @@
 			  <signal name="activate" handler="on_addfolder_activate" last_modification_time="Thu, 07 Oct 2004 15:59:32 GMT"/>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image7">
+			    <widget class="GtkImage" id="image17">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-directory</property>
 			      <property name="icon_size">1</property>
@@ -159,34 +158,23 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkImageMenuItem" id="cut1">
+			<widget class="GtkImageMenuItem" id="remove">
 			  <property name="visible">True</property>
-			  <property name="stock_item">GNOMEUIINFO_MENU_CUT_ITEM</property>
-			  <signal name="activate" handler="on_cut1_activate" last_modification_time="Thu, 07 Oct 2004 01:47:59 GMT"/>
-			</widget>
-		      </child>
+			  <property name="label" translatable="yes">Remove</property>
+			  <property name="use_underline">True</property>
+			  <signal name="activate" handler="on_remove_activate" last_modification_time="Wed, 26 Jan 2005 00:35:49 GMT"/>
 
-		      <child>
-			<widget class="GtkImageMenuItem" id="copy1">
-			  <property name="visible">True</property>
-			  <property name="stock_item">GNOMEUIINFO_MENU_COPY_ITEM</property>
-			  <signal name="activate" handler="on_copy1_activate" last_modification_time="Thu, 07 Oct 2004 01:47:59 GMT"/>
-			</widget>
-		      </child>
-
-		      <child>
-			<widget class="GtkImageMenuItem" id="paste1">
-			  <property name="visible">True</property>
-			  <property name="stock_item">GNOMEUIINFO_MENU_PASTE_ITEM</property>
-			  <signal name="activate" handler="on_paste1_activate" last_modification_time="Thu, 07 Oct 2004 01:47:59 GMT"/>
-			</widget>
-		      </child>
-
-		      <child>
-			<widget class="GtkImageMenuItem" id="clear1">
-			  <property name="visible">True</property>
-			  <property name="stock_item">GNOMEUIINFO_MENU_CLEAR_ITEM</property>
-			  <signal name="activate" handler="on_clear1_activate" last_modification_time="Thu, 07 Oct 2004 01:47:59 GMT"/>
+			  <child internal-child="image">
+			    <widget class="GtkImage" id="image18">
+			      <property name="visible">True</property>
+			      <property name="stock">gtk-delete</property>
+			      <property name="icon_size">1</property>
+			      <property name="xalign">0.5</property>
+			      <property name="yalign">0.5</property>
+			      <property name="xpad">0</property>
+			      <property name="ypad">0</property>
+			    </widget>
+			  </child>
 			</widget>
 		      </child>
 		    </widget>
@@ -708,7 +696,7 @@
 	      <property name="visible">True</property>
 	      <property name="orientation">GTK_PROGRESS_LEFT_TO_RIGHT</property>
 	      <property name="fraction">0</property>
-	      <property name="pulse_step">0.05</property>
+	      <property name="pulse_step">0.0500000007451</property>
 	    </widget>
 	    <packing>
 	      <property name="padding">0</property>
@@ -878,8 +866,8 @@
 	      <property name="width_request">320</property>
 	      <property name="visible">True</property>
 	      <property name="orientation">GTK_PROGRESS_LEFT_TO_RIGHT</property>
-	      <property name="fraction">0.1</property>
-	      <property name="pulse_step">0.02</property>
+	      <property name="fraction">0.10000000149</property>
+	      <property name="pulse_step">0.019999999553</property>
 	      <property name="text" translatable="yes">...</property>
 	    </widget>
 	    <packing>
