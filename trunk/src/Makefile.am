@@ -5,7 +5,10 @@ appdir = $(bindir)
 app_SCRIPTS = parano
 
 gladedir = $(datadir)/parano
-dist_glade_DATA = parano.png parano.glade parano.py
+dist_glade_DATA = parano.png parano-icon.png parano.glade parano.py
+
+pixmapsdir = $(datadir)/pixmaps
+pixmaps_DATA = parano-icon.png
 
 EXTRA_DIST = parano.gladep parano.in
 CLEANFILES = parano
@@ -13,4 +16,3 @@ CLEANFILES = parano
 parano: parano.in
 	sed -e s!\@datadir\@!$(gladedir)! < $< > $@
 	chmod +x $@
-

@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 PACKAGE="Parano"
-VERSION="0.2"
+VERSION="0.2.0"
 URL="http://parano.berlios.de"
 
 import os, sys , time, string, re
@@ -61,8 +61,11 @@ icons = {
 
 class File:
 	# File contained in hash file
-	def __init__(self, displayed_name="", filename="", expected_hash="", size=0):
-		self.displayed_name=displayed_name
+	def __init__(self, filename="", displayed_name="", expected_hash="", size=0):
+		if displayed_name:
+			self.displayed_name=displayed_name
+		else:
+			self.displayed_name=filename
 		self.filename=filename
 		# the Hash loaded from file
 		self.expected_hash=expected_hash
@@ -217,14 +220,14 @@ class Parano:
 		for hash, file in list:
 			root = os.path.dirname(filename)
 			absfile = os.path.join(root, file)
-			files_to_add.append(File(file, absfile, hash))
+			files_to_add.append( (absfile, file, hash) )
 		
 		# reset hashfile
 		self.new_hashfile()
 		
 		# do add the files to list
 		for f in files_to_add:
-			self.add_file(f)
+			self.add_file(f[0], f[1], f[2])
 		
 		self.filename=filename
 		self.update_ui()
@@ -266,8 +269,13 @@ class Parano:
 		self.filename=filename
 		self.update_title()
 
-	def add_file(self, f):
-		self.files.append(f)
+	def add_file(self, filename, displayed_name="", hash=""):
+		if os.path.isfile(filename):
+			self.files.append(File(filename, displayed_name, hash))
+		elif os.path.isdir(filename):
+			self.add_folder(filename)
+		else:
+			print "error when tring to add: '%s'" % filename
 
 	def update_ui(self):
 		self.update_title()
@@ -306,28 +314,27 @@ class Parano:
 				# cancel button pressed
 				break
 
-			if f.status == HASH_NOT_CHECKED:
-					
-				# for progress
-				self.current_file = os.path.basename(f.filename)
-				
-				f.real_hash = self.get_file_hash(f.filename)
-				self.progress_file=self.progress_file+1
-				
-				if len(f.expected_hash) == 0:
-					# new file in md5
+			#if f.status == HASH_NOT_CHECKED:
+			# for progress
+			self.current_file = os.path.basename(f.filename)
+			
+			f.real_hash = self.get_file_hash(f.filename)
+			self.progress_file=self.progress_file+1
+			
+			if len(f.expected_hash) == 0:
+				# new file in md5
+				f.status = HASH_OK
+			else:	
+				if f.real_hash == f.expected_hash:
+					# matching md5
 					f.status = HASH_OK
-				else:	
-					if f.real_hash == f.expected_hash:
-						# matching md5
-						f.status = HASH_OK
+				else:
+					if len(f.real_hash) == 0:
+						# cannot read file
+						f.status = HASH_ERROR
 					else:
-						if len(f.real_hash) == 0:
-							# cannot read file
-							f.status = HASH_ERROR
-						else:
-							# md5 mismatch
-							f.status = HASH_DIFFERENT
+						# md5 mismatch
+						f.status = HASH_DIFFERENT
 
 		# stop progress
 		self.progress_total_bytes=0
@@ -503,7 +510,7 @@ class Parano:
 		result = dialog.run()
 		if result == gtk.RESPONSE_OK:
 			for f in dialog.get_filenames():
-				self.add_file(File(f,f))
+				self.add_file(f)
 	
 		self.update_file_list()
 		dialog.hide_all()
@@ -554,7 +561,7 @@ class Parano:
 			gtk_iteration()
 			for name in files:
 				f = os.path.join(root, name)
-				self.add_file(File(f,f))
+				self.add_file(f)
 				if self.abort:
 					break
 			if self.abort:
@@ -595,9 +602,11 @@ class Parano:
 		window.signal_autoconnect(self)
 		auto_connect(self, window)
 
+		# file list
 		self.filelist = filelist = window.get_widget("filelist")
 		filelist.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 		
+		# icon column
 		renderer = gtk.CellRendererPixbuf()
 		renderer.set_property("stock-id", gtk.STOCK_MISSING_IMAGE)
 		column = gtk.TreeViewColumn("Status", renderer)
@@ -605,18 +614,9 @@ class Parano:
 		column.set_sort_indicator(True)
 		column.set_sort_order(gtk.SORT_ASCENDING)
 		column.add_attribute(renderer, "stock_id", COLUMN_ICON)
-		
-		#filelist.append_column(column)
-		#column = gtk.TreeViewColumn("Hash", gtk.CellRendererText(),
-		#                            text=COLUMN_HASH)
-		#column.set_sort_column_id(COLUMN_HASH)
-		
-		#renderer = gtk.CellRendererText()
-		#column.pack_start(renderer, gtk.TRUE)
-		#column.add_attribute(renderer, "text", COLUMN_HASH)
-	
 		filelist.append_column(column)
-		
+
+		# filename column
 		column = gtk.TreeViewColumn("File", gtk.CellRendererText(),
 		                            text=COLUMN_FILE)
 		column.set_sort_column_id(COLUMN_FILE)
@@ -625,6 +625,7 @@ class Parano:
 		self.liststore = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING)
 		filelist.set_model(self.liststore)
 	
+		# we accept dropped files
 		filelist.drag_dest_set(gtk.DEST_DEFAULT_ALL,[
 			('text/uri-list',0,0),
 			('text/plain',0,0),
@@ -643,13 +644,13 @@ class Parano:
 			result = re.search(r"file:(//)?(.*)", f)
 			if result:
 				f = result.group(2)
+				
 			# remove trailing noise
 			f = f.strip("\r\n\x00",)
+			
 			# and add the file
-			if os.path.isfile(f):
-				self.add_file(File(f,f))
-			elif os.path.isdir(f):
-				self.add_folder(f)
+			if os.path.exists(f):
+				self.add_file(f)
 			elif f: # TODO: error
 				print _("skipping dropped uri: %s") % repr(f)
 		
@@ -675,7 +676,7 @@ class Parano:
 					break
 		
 		for f in initial_files:
-			self.add_file(File(f,f))
+			self.add_file(f)
 			
 		self.update_title()
 		self.modified=False
@@ -700,6 +701,8 @@ def excepthook(type, value, tb):
 	sys.exit(1)
 
 if __name__ == "__main__":
+
+	print PACKAGE,VERSION,"-",URL, "- ALPHA VERSION"
 
 	sys.excepthook = excepthook
 

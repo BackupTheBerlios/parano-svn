@@ -1,0 +1,5 @@
+application/x-md5
+	ext: md5 MD5
+
+application/x-sfv
+	ext: sfv SFV

@@ -1,0 +1,9 @@
+application/x-sfv:
+	open=parano %f
+	view=parano %f
+	icon-filename=parano/parano-icon.png
+
+application/x-md5:
+	open=parano %f
+	view=parano %f
+	icon-filename=parano/parano-icon.png

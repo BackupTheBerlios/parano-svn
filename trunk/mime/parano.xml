@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-sfv">
+    <comment>SFV Checksum File</comment>
+    <glob pattern="*.sfv"/>
+    <glob pattern="*.SFV"/>
+  </mime-type>
+  <mime-type type="application/x-md5">
+    <comment>MD5 Hash File</comment>
+    <glob pattern="*.md5"/>
+    <glob pattern="*.MD5"/>
+  </mime-type>
+</mime-info>

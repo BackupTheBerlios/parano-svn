@@ -1,0 +1,14 @@
+? translation
+? installation
+
+- glade wrapper
+- better progress
+
+- hash not generated after one generation
+  (save md5, then sfv...)
+
+- drag&drop from nautilus
+
+* nautilus scripts:
+	- generate sfv/md5 for this folder
+	- verify given sfv/md5
