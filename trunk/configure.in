@@ -1,0 +1,56 @@
+dnl -*- Mode: autoconf -*-
+dnl Process this file with autoconf to produce a configure script.
+AC_PREREQ(2.53)
+AC_INIT(src/parano.py)
+AM_INIT_AUTOMAKE(parano, 0.0.1)
+AM_MAINTAINER_MODE
+
+m4_define(required_python_abi, 2.3)
+m4_define(required_python_version, 2.3.3)
+m4_define(required_pygtk_version, 2.3.97)
+
+dnl put the ACLOCAL flags in the makefile
+ACLOCAL="$ACLOCAL $ACLOCAL_FLAGS"
+
+ALL_LINGUAS="fr"
+GETTEXT_PACKAGE=parano
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package])
+AM_GLIB_GNU_GETTEXT
+AC_PROG_INTLTOOL
+
+AM_PATH_PYTHON(required_python_abi, required_python_version)
+dnl AM_PATH_PYTHON_VERSION(required_python_abi, required_python_version)
+
+dnl For writing pygtk based extensions, one would call:
+dnl PKG_CHECK_MODULES(PYGNOME_HELLO, pygtk-2.0 >= 2.3.97)
+
+dnl Check for correctly installed pygtk
+AC_MSG_CHECKING(for pygtk required_pygtk_version installed for python required_python_abi)
+prog="
+import pygtk; pygtk.require('2.0')
+import gobject
+assert gobject.pygtk_version >= tuple(map(int, 'required_pygtk_version'.split('.')))
+"
+if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC; then
+    AC_MSG_RESULT(found)
+else
+    AC_MSG_RESULT(not found)
+    AC_MSG_ERROR(required pygtk version not found)
+fi
+
+
+dnl -===- <gconf> -===-
+AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
+if test x"$GCONFTOOL" = xno; then
+  AC_MSG_ERROR([gconftool-2 executable not found in your path - should be installed with GConf])
+fi
+AM_GCONF_SOURCE_2
+dnl -===- </gconf> -===-
+
+AC_OUTPUT(
+        Makefile
+        po/Makefile.in
+        src/Makefile
+        )
+

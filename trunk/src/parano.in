@@ -1,0 +1,4 @@
+#!/bin/sh
+cd "@datadir@"
+python "parano.py"
+cd -

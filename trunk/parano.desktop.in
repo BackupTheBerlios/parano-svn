@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Parano
+Comment=Create and modify MD5 files
+Exec=parano
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;Application;System;Utility;
+GenericName=MD5sum Manager
