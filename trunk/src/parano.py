@@ -317,7 +317,7 @@ class Parano:
 		if self.filename != "":
 			title = os.path.basename(self.filename)
 		else:
-			title = _("Untitled MD5")
+			title = _("Untitled Hashfile")
 		if self.modified:
 			title = _("%s (Unsaved)") % title
 			
@@ -443,30 +443,47 @@ class Parano:
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 
+
 	def on_quit_activate(self, widget):
 		if not self.on_delete_event(widget):
 			gtk.main_quit()
 
-	def on_delete_event(self, widget, event=None, data=None):
-		# Change FALSE to TRUE and the main window will not be destroyed
-		# with a "delete_event".
+	def discard_hashfile(self):
+		# display a dialog asking the user if he want to save
+		# but only if the hashfile was modified
+		# return True if we can discard hashfile contents
+		# return False if we cannot touch hashfile contents
+		
 		if self.modified and len(self.files)>0:
-			dialog = gtk.glade.XML("parano.glade","dialog_save_before_closing")\
-						.get_widget("dialog_save_before_closing")
+			dialog = gtk.glade.XML("parano.glade","dialog_save_changes")\
+						.get_widget("dialog_save_changes")
 			result = dialog.run()
 			dialog.hide_all()
 			if result == gtk.RESPONSE_OK:
-				# save
-				self.on_save_hashfile_activate(widget)
-				return gtk.TRUE
-			if result == gtk.RESPONSE_CANCEL:
-				# cancel
-				return gtk.TRUE
-			if result == gtk.RESPONSE_CLOSE:
-				# close
-				return gtk.FALSE
+				# save before continue
+				self.on_save_hashfile_activate(None)
+				if self.modified: 
+					# hashfile still marked as modified, so saving was canceled
+					return False
+				else:
+					# hashfile saved
+					return True
+			elif result == gtk.RESPONSE_CANCEL:
+				# cancel operation
+				return False
+			elif result == gtk.RESPONSE_CLOSE:
+				# don't save and continue
+				return True
+		return True
 
-		return gtk.FALSE
+	def on_delete_event(self, widget, event=None, data=None):
+		# Change FALSE to TRUE and the main window will not be destroyed
+		# with a "delete_event".
+		
+		if self.discard_hashfile():
+			return gtk.FALSE
+		else:
+			return gtk.TRUE
 
 	def on_destroy(self, widget, data=None):
 		gtk.main_quit()
@@ -480,10 +497,15 @@ class Parano:
 
 	def on_new_hashfile_activate(self, widget):
 		# new_hashfile
-		self.new_hashfile()
+		if self.discard_hashfile():
+			self.new_hashfile()
 
 	def on_load_hashfile_activate(self, widget):
 		# load_hashfile dialog
+
+		if not self.discard_hashfile():
+			return
+
 		self.loadhashfile_dialog = gtk.glade.XML("parano.glade","filechooserdialog_loadhashfile")
 		dialog = self.loadhashfile_dialog.get_widget("filechooserdialog_loadhashfile")
 

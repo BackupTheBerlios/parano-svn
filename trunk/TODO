@@ -1,4 +1,4 @@
-? translation
+* translation
 ? installation
 
 - glade wrapper
@@ -12,3 +12,7 @@
 * nautilus scripts:
 	- generate sfv/md5 for this folder
 	- verify given sfv/md5
+
+- when dropping a hashfile, we want to verify it, not add it
+- verify if we ask for saving when we load a new hashfile
+* use gnome vfs
