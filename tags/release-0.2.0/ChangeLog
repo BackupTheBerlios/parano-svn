@@ -1,0 +1,3 @@
+2005-02-24	added a dialog asking the user if he wants to
+save/cancel/dont_save when we clear/load/close the hashfile
+	
