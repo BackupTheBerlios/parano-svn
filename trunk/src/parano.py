@@ -16,7 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-    
+
+PACKAGE="Parano"
+VERSION="0.2"
+URL="http://parano.berlios.de"
+
 import os
 import sys
 import pdb
@@ -100,23 +104,61 @@ class HasherCRC32:
 	def get_hash(self):
 		return "%8X" % self.crc
 
-formats = ( {
-		"name": "MD5",
-		"pattern": "*.md5*",
-		"regpattern": r".*\.md5(sum)?",
-		"hasher": HasherMD5(),
-		# comment | hash + filename | only whitespace line
-		"parser": r";.*|^(?P<hash>[\dA-Fa-f]{32}) \*?(?P<file>.*$)|^\s*$",
-		"writer": "%(hash)s *%(file)s\n"
-	}, {
-		"name": "SFV",
-		"pattern":"*.sfv",
-		"regpattern": r".*\.sfv",
-		"hasher": HasherCRC32(),
-		# comment | filename + hash | only whitespace line
-		"parser": r";.*|(?P<file>.*) (?P<hash>[\dA-Fa-f]{8}$)|^\s*$",
-		"writer": "%(file)s %(hash)s\n"
-	} )
+class FormatBase:
+	def detect_file(self, f):
+		for line in f:
+			result = self.regex_reader.search(line)
+			if result:
+				# parse is ok
+				hash = result.group("hash")
+				file = result.group("file")
+				if hash and file:
+					# a line with valid content
+					return True
+		return False
+		
+	def read_file(self, f):
+		list = []
+		for line in f:
+			result = self.regex_reader.search(line)
+			if result:
+				# parse is ok
+				hash = result.group("hash")
+				file = result.group("file")
+				if hash and file:
+					# a line with valid content
+					list.append( (hash, file) )
+		return list
+
+	def write_file(self, f, list):
+		comment = "Created by %s %s - %s" % (PACKAGE, VERSION, URL)
+		f.write(self.format_comment % comment)
+		for hash, file in list:
+			f.write(self.format_writer % locals())
+
+class FormatMD5 (FormatBase):
+	def __init__(self):
+		self.name = "MD5"
+		self.filename_pattern = "*.md5*"
+		self.filename_regex = re.compile(r".*\.md5(sum)?")
+		self.hasher = HasherMD5()
+
+		self.regex_reader = re.compile(r";.*|^(?P<hash>[\dA-Fa-f]{32}) \*?(?P<file>.*$)|^\s*$")
+		self.format_writer = "%(hash)s *%(file)s\n"
+		self.format_comment= "; %s\n"
+
+class FormatSFV (FormatBase):
+	def __init__(self):
+		self.name = "SFV"
+		self.filename_pattern = "*.sfv"
+		self.filename_regex = re.compile(r".*\.sfv")
+		self.hasher = HasherCRC32()
+
+		self.regex_reader = re.compile(r";.*|(?P<file>.*) (?P<hash>[\dA-Fa-f]{8}$)|^\s*$")
+		self.format_writer = "%(file)s %(hash)s\n"
+		self.format_comment= "; %s\n"
+
+formats = (FormatMD5(), FormatSFV())
 
 class Parano:
 
@@ -128,7 +170,7 @@ class Parano:
 			print "HASHING ERROR", filename
 			return ""
 		
-		hasher = self.format["hasher"]
+		hasher = self.format.hasher
 		hasher.init()
 		
 		while 1:
@@ -163,30 +205,24 @@ class Parano:
 		files_to_add=[]
 		self.format=None
 		for format in formats:
-			# compile the regex of this format to parse content
-			regex = re.compile(format["parser"])
-			for line in f:
-				result = regex.search(line)
-				if result:
-					# parse is ok
-					hash = result.group("hash")
-					file = result.group("file")
-					if hash and file:
-						# a line with interesting content
-						if not self.format:
-							self.format = format
-							print "Detected format:", format["name"]
-						root = os.path.dirname(filename)
-						absfile = os.path.join(root, file)
-						files_to_add.append(File(file, absfile, hash))
-				else:
-					# error, bad format
-					break
-
-		f.close()
-		
+			f.seek(0)
+			if format.detect_file(f):
+				self.format = format
+				print "Detected format:", format.name
+				
 		if not self.format:
 			print "unknown format"
+			f.close()
+			return
+				
+		f.seek(0)
+		list = self.format.read_file(f)
+		f.close()
+	
+		for hash, file in list:
+			root = os.path.dirname(filename)
+			absfile = os.path.join(root, file)
+			files_to_add.append(File(file, absfile, hash))
 		
 		# reset hashfile
 		self.new_hashfile()
@@ -202,17 +238,16 @@ class Parano:
 	def save_hashfile(self, filename):
 
 		for format in formats:
-			regex = re.compile(format["regpattern"])
+			regex = format.filename_regex
 			result = regex.search(filename)
 			if result:
 				self.format = format
-				print "Saving with format:", format["name"]
+				print "Saving with format:", format.name
 				break
-		
 
 		self.update_hashfile()
 
-		f = open(filename, "w")
+		list=[]
 		remove = len(os.path.dirname(filename))+1
 		for ff in self.files:
 			# convert to a path relative to hashfile
@@ -225,8 +260,13 @@ class Parano:
 				return
 			file = ff.filename[remove:]
 			hash = ff.real_hash
-			f.write(self.format["writer"] % locals())
+			list.append( (hash,file) )
+			
+		
+		f = open(filename, "w")
+		self.format.write_file(f, list)
 		f.close()
+		
 		self.modified=False
 		self.filename=filename
 		self.update_title()
@@ -408,8 +448,8 @@ class Parano:
 
 		filter = gtk.FileFilter()
 		
-		for f in formats:
-			filter.add_pattern(f["pattern"])
+		for format in formats:
+			filter.add_pattern(format.filename_pattern)
 
 		dialog.set_filter(filter)
 
@@ -437,8 +477,8 @@ class Parano:
 		dialog = self.savehashfile_dialog.get_widget("filechooserdialog_savehashfile")
 		
 		filter = gtk.FileFilter()
-		for f in formats:
-			filter.add_pattern(f["pattern"])
+		for format in formats:
+			filter.add_pattern(format.filename_pattern)
 		dialog.set_filter(filter)
 		
 		result = dialog.run()
