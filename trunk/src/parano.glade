@@ -9,7 +9,7 @@
   <property name="width_request">512</property>
   <property name="height_request">384</property>
   <property name="visible">True</property>
-  <property name="title" translatable="yes">Parano [alpha]</property>
+  <property name="title" translatable="yes">Parano [0.0.1 ALPHA]</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -998,8 +998,8 @@
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="logo">parano.png</property>
   <property name="copyright" translatable="yes">(c) Gautier Portet</property>
-  <property name="comments" translatable="yes">GNOME MD5 Hasher</property>
-  <property name="authors">Gautier Portet &lt;kassoulet@no-log.org&gt;</property>
+  <property name="comments" translatable="yes">Parano MD5 Manager (0.0.1)</property>
+  <property name="authors">Gautier Portet &lt;kassoulet@users.berlios.de&gt;</property>
   <property name="translator_credits" translatable="yes">translator_credits</property>
   <signal name="close" handler="gtk_widget_destroy" last_modification_time="Thu, 07 Oct 2004 02:00:10 GMT"/>
 </widget>
