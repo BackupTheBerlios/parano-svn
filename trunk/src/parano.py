@@ -42,6 +42,18 @@ def auto_connect(object, dialog):
 		assert not hasattr(object, name), name
 		setattr(object, name, w)
 
+option_quiet = False
+
+def log(*args):
+	if not option_quiet:
+		ss = ""
+		for s in args:
+			ss += str(s)+" "
+		print ss
+
+def debug(str):
+	print str
+
 COLUMN_ICON=0
 COLUMN_FILE=1
 
@@ -105,6 +117,7 @@ class HasherCRC32:
 class FormatBase:
 	def detect_file(self, f):
 		for line in f:
+			line = line.strip()
 			result = self.regex_reader.search(line)
 			if result:
 				# parse is ok
@@ -118,6 +131,7 @@ class FormatBase:
 	def read_file(self, f):
 		list = []
 		for line in f:
+			line = line.strip()
 			result = self.regex_reader.search(line)
 			if result:
 				# parse is ok
@@ -165,7 +179,7 @@ class Parano:
 		try:
 			f = open(filename, 'rb');
 		except IOError:
-			print _("Cannot read file: "), filename
+			log( _("Cannot read file: "), filename)
 			return ""
 		
 		hasher = self.format.hasher
@@ -195,25 +209,42 @@ class Parano:
 		self.modified=False
 		self.update_title()
 
+	def get_hashfile_format(self, filename):
+	
+		try:
+			f = open(filename, "r")
+	
+			for format in formats:
+				# search in al our recognized formats
+				regex = format.filename_regex
+				result = regex.search(filename.lower())
+				if result:
+					# this can be a valid filename, now look inside
+					f.seek(0)
+					if format.detect_file(f):
+						# yes, this is a valid hashfile \o/
+						f.close()
+						return format
+					
+			f.close()
+		except IOError:
+			pass
+			
+		return None
+
 	def load_hashfile(self, filename):
 		# load hashfile
 
-		f = open(filename, "r")
-
 		files_to_add=[]
-		self.format=None
-		for format in formats:
-			f.seek(0)
-			if format.detect_file(f):
-				self.format = format
-				print "Detected format:", format.name
+		self.format=self.get_hashfile_format(filename)
 				
 		if not self.format:
-			print "unknown format"
+			log("unknown format")
 			f.close()
 			return
+		log("Detected format: " + self.format.name)
 				
-		f.seek(0)
+		f = open(filename, "r")
 		list = self.format.read_file(f)
 		f.close()
 	
@@ -240,7 +271,7 @@ class Parano:
 			result = regex.search(filename)
 			if result:
 				self.format = format
-				print "Saving with format:", format.name
+				log("Saving with format:", format.name)
 				break
 
 		self.update_hashfile()
@@ -275,7 +306,7 @@ class Parano:
 		elif os.path.isdir(filename):
 			self.add_folder(filename)
 		else:
-			print "error when tring to add: '%s'" % filename
+			log("error when tring to add: '%s'" % filename)
 
 	def update_ui(self):
 		self.update_title()
@@ -325,7 +356,8 @@ class Parano:
 				# new file in md5
 				f.status = HASH_OK
 			else:	
-				if f.real_hash == f.expected_hash:
+				#print self.current_file, f.real_hash, f.expected_hash
+				if f.real_hash.lower() == f.expected_hash.lower():
 					# matching md5
 					f.status = HASH_OK
 				else:
@@ -398,7 +430,7 @@ class Parano:
 			gtk_iteration()
 			time.sleep(0.1)
 
-		print (total/(time.time()-start))/(1024*1024), "MB/s"
+		log ( (total/(time.time()-start))/(1024*1024) , "MB/s")
 
 		self.update_file_list()  
 		progress.hide_all()	
@@ -637,6 +669,8 @@ class Parano:
 		files = selection_data.data.split()
 		drag_context.drop_finish(True, timestamp)
 		
+		
+		
 		for f in files:
 		
 			f = urllib.unquote(f)
@@ -647,12 +681,26 @@ class Parano:
 				
 			# remove trailing noise
 			f = f.strip("\r\n\x00",)
+						
+			if self.get_hashfile_format(f):
+					dialog = gtk.glade.XML("parano.glade","dialog_add_or_open")
+					dialog = dialog.get_widget("dialog_add_or_open")
 			
-			# and add the file
+					result = dialog.run()
+					dialog.hide_all()
+					if result == gtk.RESPONSE_CANCEL:
+						# abort drop
+						return
+					if result == gtk.RESPONSE_CLOSE:
+						# open new hashfile
+						self.load_hashfile(f)
+						return
+			
+			# add the file
 			if os.path.exists(f):
 				self.add_file(f)
 			elif f: # TODO: error
-				print _("skipping dropped uri: %s") % repr(f)
+				log( _("skipping dropped uri: %s") % repr(f))
 		
 		self.modified=True
 		self.update_ui()
@@ -664,16 +712,9 @@ class Parano:
 		if len(initial_files) == 1:
 			# load hash file
 			filename = initial_files[0]
-			for format in formats:
-				regex = format.filename_regex
-				result = regex.search(filename)
-				if result:
-					self.format = format
-					print "Loading hashfile, detected format: %s" % format.name
-					self.load_hashfile(filename)
-					initial_files=[]
-					self.filename=""
-					break
+			if self.get_hashfile_format(filename):
+				self.load_hashfile(filename)
+				initial_files=[]
 		
 		for f in initial_files:
 			self.add_file(f)
@@ -702,8 +743,6 @@ def excepthook(type, value, tb):
 
 if __name__ == "__main__":
 
-	print PACKAGE,VERSION,"-",URL, "- ALPHA VERSION"
-
 	sys.excepthook = excepthook
 
 	name = "parano"
@@ -712,11 +751,17 @@ if __name__ == "__main__":
 	gtk.glade.textdomain(name)
 
 	# (longName, shortName, type , default, flags, descrip , argDescrip)
-	table=[]
+	table=[
+		("quiet"  , 'q'   , None ,   None  , 0    , 'Do not print any message on stdout'   , ""),
+	]
 
 	gnome.init(PACKAGE, VERSION, gnome.libgnome_module_info_get()) 
 	
 	leftover, argdict = gnome.popt_parse(sys.argv, table)
+
+	if argdict["quiet"]: option_quiet = True
+		
+	log( PACKAGE +" "+ VERSION +" - ALPHA VERSION" )
 
 	parano = Parano(leftover)
 	parano.main()
