@@ -706,12 +706,17 @@ if __name__ == "__main__":
 
 	sys.excepthook = excepthook
 
+	name = "parano"
+	gettext.install(name, unicode=1)
+	gtk.glade.bindtextdomain(name)
+	gtk.glade.textdomain(name)
+
 	# (longName, shortName, type , default, flags, descrip , argDescrip)
 	table=[]
 
 	gnome.init(PACKAGE, VERSION, gnome.libgnome_module_info_get()) 
 	
 	leftover, argdict = gnome.popt_parse(sys.argv, table)
-	
+
 	parano = Parano(leftover)
 	parano.main()
