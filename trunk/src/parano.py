@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# Parano - GNOME MD5 Frontend
-# Copyright (C) 2004 Gautier Portet <kassoulet@gmail.com>
+# Parano - GNOME HashFile Frontend
+# Copyright (C) 2004-2005 Gautier Portet <kassoulet@gmail.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import string
 import re
 import thread
 import md5
-#import zlib
+import zlib
 import pygtk
 pygtk.require('2.0')
 import gobject
@@ -36,37 +36,37 @@ import gettext
 _=gettext.gettext
 
 COLUMN_ICON=0
-COLUMN_HASH=1
-COLUMN_FILE=2
+#COLUMN_HASH=1
+COLUMN_FILE=1
 
 BUFFER_SIZE=1024*64
 
-MD5_NOT_CHECKED=0	# md5 not checked yet
-MD5_OK=1			# md5 is as excepted
-MD5_ERROR=2			# cannot check md5
-MD5_DIFFERENT=3 	# md5 is not what expected: file corrupted !
+HASH_NOT_CHECKED=0	# hash not checked yet
+HASH_OK=1			# hash is as excepted
+HASH_ERROR=2			# cannot check hash
+HASH_DIFFERENT=3 	# hash is not what expected: file corrupted !
 
 icons = {
-	MD5_NOT_CHECKED	: gtk.STOCK_MISSING_IMAGE,
-	MD5_OK			: gtk.STOCK_YES,
-	MD5_ERROR		: gtk.STOCK_DIALOG_WARNING,
-	MD5_DIFFERENT	: gtk.STOCK_NO,
+	HASH_NOT_CHECKED	: None,
+	HASH_OK			: gtk.STOCK_YES,
+	HASH_ERROR		: gtk.STOCK_DIALOG_WARNING,
+	HASH_DIFFERENT	: gtk.STOCK_NO,
 }
 class File:
-	# File contained in MD5 collection 
-	def __init__(self, displayed_name="", filename="", expectedMD5="", size=0):
+	# File contained in hash file
+	def __init__(self, displayed_name="", filename="", expected_hash="", size=0):
 		# the displayed name
 		self.displayed_name=displayed_name
 		# the filename
 		self.filename=filename
-		# the MD5 loaded from file
-		self.expectedMD5=expectedMD5
-		# the MD5 calculated
-		self.realMD5=""
+		# the Hash loaded from file
+		self.expected_hash=expected_hash
+		# the Hash calculated
+		self.real_hash=""
 		# the file size
 		self.size=size
 		# sum status
-		self.status=MD5_NOT_CHECKED
+		self.status=HASH_NOT_CHECKED
 
 		if not size:
 			try:
@@ -80,20 +80,57 @@ def gtk_iteration():
 	while gtk.events_pending():
 		gtk.main_iteration(gtk.FALSE)
 
+class HasherMD5:
+	def init(self):
+		self.hasher = md5.new()
+		
+	def update(self, data):
+		self.hasher.update(data)
+		
+	def get_hash(self):
+		return self.hasher.hexdigest()
+
+class HasherCRC32:
+	def init(self):
+		self.crc = zlib.crc32("")
+		
+	def update(self, data):
+		self.crc = zlib.crc32(data,self.crc)
+		
+	def get_hash(self):
+		return "%8X" % self.crc
+
+formats = ( {
+		"name": "MD5",
+		"pattern": "*.md5*",
+		"regpattern": r".*\.md5(sum)?",
+		"hasher": HasherMD5(),
+		# comment | hash + filename | only whitespace line
+		"parser": r";.*|^(?P<hash>[\dA-Fa-f]{32}) \*?(?P<file>.*$)|^\s*$",
+		"writer": "%(hash)s *%(file)s\n"
+	}, {
+		"name": "SFV",
+		"pattern":"*.sfv",
+		"regpattern": r".*\.sfv",
+		"hasher": HasherCRC32(),
+		# comment | filename + hash | only whitespace line
+		"parser": r";.*|(?P<file>.*) (?P<hash>[\dA-Fa-f]{8}$)|^\s*$",
+		"writer": "%(file)s %(hash)s\n"
+	} )
+
 class Parano:
 
-	def calculate_file_md5(self, filename):
-		# compute MD5 hash of given file	
+	def get_file_hash(self, filename):
+		# compute hash of given file	
 		try:
 			f = open(filename, 'rb');
 		except IOError:
 			print "HASHING ERROR", filename
 			return ""
 		
-		hasher = md5.new()
+		hasher = self.format["hasher"]
+		hasher.init()
 		
-		#crc = zlib.crc32("")
-
 		while 1:
 			while self.paused:
 				# paused, wait forever
@@ -104,14 +141,13 @@ class Parano:
 			if not data:
 				break
 			hasher.update(data)
-			#crc = zlib.crc32(data,crc)
 			self.progress_current_bytes=self.progress_current_bytes+BUFFER_SIZE
 
 		f.close()
-		return hasher.hexdigest()
+		return hasher.get_hash()
 
-	def new_md5(self):
-		# reset MD5
+	def new_hashfile(self):
+		# reset hashfile
 		self.filename=""
 		self.files=[]
 		self.total_size=0
@@ -119,80 +155,67 @@ class Parano:
 		self.modified=False
 		self.update_title()
 
-	def load_md5(self, filename):
-		# load MD5 from file
+	def load_hashfile(self, filename):
+		# load hashfile
 
 		f = open(filename, "r")
 
 		files_to_add=[]
-		line="\n"	
-		while line != "":
-			line = f.readline()
-			
-			valid=True
-			if line=="":
-				# EOF
-				valid=False
-			if line.find(";")!=-1:
-				# comment
-				valid=False
-			
-			if valid:
-				# 32
-				if len(line)<=35:
-					# line too shot !
-					valid=False
-	
-				if valid:
-					md5 = line[:32]
-					file= line[34:-1]
-					for c in md5:
-						if c not in string.hexdigits:
-							# not a valid md5 sum
-							valid=False
-					for c in file:
-						if c < 32:
-							# cannot be a filename
-							valid=False
+		self.format=None
+		for format in formats:
+			# compile the regex of this format to parse content
+			regex = re.compile(format["parser"])
+			for line in f:
+				result = regex.search(line)
+				if result:
+					# parse is ok
+					hash = result.group("hash")
+					file = result.group("file")
+					if hash and file:
+						# a line with interesting content
+						if not self.format:
+							self.format = format
+							print "Detected format:", format["name"]
+						root = os.path.dirname(filename)
+						absfile = os.path.join(root, file)
+						files_to_add.append(File(file, absfile, hash))
+				else:
+					# error, bad format
+					break
 
-				if not valid:
-					# fatal error! stop loading
-					dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, 
-								_("Cannot read %s\nIt's maybe not a MD5 sum file")%filename)
-					dialog.run()
-					dialog.hide_all()
-					f.close()
-					return
-					
-				if file[0] == "*":
-					# remove binary flag if present
-					file = file[1:]
-
-				# convert filename from relative to md5 file to absolute
-				root = os.path.dirname(filename)
-				absfile = os.path.join(root, file)
-
-				files_to_add.append(File(file, absfile, md5))
-			
 		f.close()
 		
-		self.new_md5()
+		if not self.format:
+			print "unknown format"
 		
+		# reset hashfile
+		self.new_hashfile()
+		
+		# do add the files to list
 		for f in files_to_add:
 			self.add_file(f)
 		
 		self.filename=filename
-		self.modified=False
-		self.update_title()
-		self.update_file_list()
-		self.update_md5()
-				
-	def save_md5(self, filename):
-	
+		self.update_ui()
+		self.update_hashfile()
+
+	def save_hashfile(self, filename):
+
+		for format in formats:
+			regex = re.compile(format["regpattern"])
+			result = regex.search(filename)
+			if result:
+				self.format = format
+				print "Saving with format:", format["name"]
+				break
+		
+
+		self.update_hashfile()
+
 		f = open(filename, "w")
 		remove = len(os.path.dirname(filename))+1
 		for ff in self.files:
-			# convert to a path relative to md5 file
+			# convert to a path relative to hashfile
 			if len(ff.filename)<remove:
 				# TODO: better error detection
 				dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, 
@@ -200,16 +223,20 @@ class Parano:
 				dialog.run()
 				dialog.hide_all()
 				return
-			filename = ff.filename[remove:]
-			f.write("%s *%s\n" % (ff.realMD5,filename))
+			file = ff.filename[remove:]
+			hash = ff.real_hash
+			f.write(self.format["writer"] % locals())
 		f.close()
 		self.modified=False
 		self.filename=filename
 		self.update_title()
 
 	def add_file(self, f):
-	
 		self.files.append(f)
+
+	def update_ui(self):
+		self.update_title()
+		self.update_file_list()
 
 	def update_title(self):
 		
@@ -222,11 +249,11 @@ class Parano:
 			
 		self.window_main.set_title(title)
 
-	def on_update_md5_cancel(self, widget):
+	def on_update_hash_cancel(self, widget):
 		self.paused = False
 		self.abort = True	
 
-	def on_update_md5_pause(self, widget):
+	def on_update_hash_pause(self, widget):
 		self.paused = not self.paused
 		if self.paused:
 			self.progress_dialog.get_widget("label_filename").set_markup(_("<i>%s (Paused)</i>") % self.current_file)
@@ -235,48 +262,48 @@ class Parano:
 			self.progress_dialog.get_widget("label_filename").set_markup("<i>%s</i>" % self.current_file)
 
 
-	def thread_update_md5(self):
+	def thread_update_hash(self):
 	
 		for f in self.files:
 			if self.abort:
 				# cancel button pressed
 				break
 
-			if f.status == MD5_NOT_CHECKED:
+			if f.status == HASH_NOT_CHECKED:
 					
 				# for progress
 				self.current_file = os.path.basename(f.filename)
 				
-				f.realMD5 = self.calculate_file_md5(f.filename)
+				f.real_hash = self.get_file_hash(f.filename)
 				self.progress_file=self.progress_file+1
 				
-				if len(f.expectedMD5) == 0:
+				if len(f.expected_hash) == 0:
 					# new file in md5
-					f.status = MD5_OK
+					f.status = HASH_OK
 				else:	
-					if f.realMD5 == f.expectedMD5:
+					if f.real_hash == f.expected_hash:
 						# matching md5
-						f.status = MD5_OK
+						f.status = HASH_OK
 					else:
-						if len(f.realMD5) == 0:
+						if len(f.real_hash) == 0:
 							# cannot read file
-							f.status = MD5_ERROR
+							f.status = HASH_ERROR
 						else:
 							# md5 mismatch
-							f.status = MD5_DIFFERENT
+							f.status = HASH_DIFFERENT
 
 		# stop progress
 		self.progress_total_bytes=0
 
 
-	def update_md5(self):
+	def update_hashfile(self):
 
 		self.progress_dialog = gtk.glade.XML("parano.glade","hashing_progress")
 		progress = self.progress_dialog_dlg = self.progress_dialog.get_widget("hashing_progress")
 
 		events = { 
-					"on_button_cancel_clicked" : self.on_update_md5_cancel,
-					"on_button_pause_clicked" : self.on_update_md5_pause 
+					"on_button_cancel_clicked" : self.on_update_hash_cancel,
+					"on_button_pause_clicked" : self.on_update_hash_pause 
 				}
 		self.progress_dialog.signal_autoconnect(events)
 		progressbar = self.progress_dialog.get_widget("progressbar")
@@ -302,7 +329,7 @@ class Parano:
 
 		start=time.time()
 		total = self.progress_total_bytes
-		thread.start_new_thread(self.thread_update_md5, ())
+		thread.start_new_thread(self.thread_update_hash, ())
 		
 		while self.progress_total_bytes>0:
 			if not self.paused:
@@ -334,7 +361,7 @@ class Parano:
 		self.liststore.clear()
 		for f in self.files:
 			iter = self.liststore.append()
-			self.liststore.set(iter, COLUMN_FILE, f.displayed_name, COLUMN_HASH, f.realMD5)
+			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 
 
@@ -370,33 +397,52 @@ class Parano:
 		# about dialog
 		self.about_dialog = gtk.glade.XML("parano.glade","dialog_about")
 
-	def on_new_md5_activate(self, widget):
-		# new_md5
-		self.new_md5()
+	def on_new_hashfile_activate(self, widget):
+		# new_hashfile
+		self.new_hashfile()
 
-	def on_load_md5_activate(self, widget):
-		# load_md5 dialog
-		self.loadmd5_dialog = gtk.glade.XML("parano.glade","filechooserdialog_loadmd5")
-		dialog = self.loadmd5_dialog.get_widget("filechooserdialog_loadmd5")
+	def on_load_hashfile_activate(self, widget):
+		# load_hashfile dialog
+		self.loadhashfile_dialog = gtk.glade.XML("parano.glade","filechooserdialog_loadhashfile")
+		dialog = self.loadhashfile_dialog.get_widget("filechooserdialog_loadhashfile")
+
+		filter = gtk.FileFilter()
+		
+		for f in formats:
+			filter.add_pattern(f["pattern"])
+
+		dialog.set_filter(filter)
+
+		#hash = gtk.CheckButton(_("Calculate hash automatically"))
+		#hash.show ()
+		#self.addfolder_dialog.get_widget("filechooserdialog_addfolder").set_extra_widget(hash)
+
 		result = dialog.run()
+		dialog.hide_all()
 		if result == gtk.RESPONSE_OK:
-			self.load_md5(dialog.get_filename())
+			self.load_hashfile(dialog.get_filename())
 	
 		self.update_file_list()
-		dialog.hide_all()
 		
-	def on_save_md5_activate(self, widget):
-		# save_md5 dialog
-		if self.filename != "":
-			self.save_md5(self.filename)
+	def on_save_hashfile_activate(self, widget):
+		# save_hashfile dialog
+		if self.filename == "":
+			self.on_save_as_hashfile_activate(widget)
 		else:
-			self.on_save_as_md5_activate(widget)
+			self.save_hashfile(self.filename)
 
-	def on_save_as_md5_activate(self, widget):
-		# save_as_md5 dialog
-		self.savemd5_dialog = gtk.glade.XML("parano.glade","filechooserdialog_savemd5")
-		dialog = self.savemd5_dialog.get_widget("filechooserdialog_savemd5")
+	def on_save_as_hashfile_activate(self, widget):
+		# save_as_hashfile dialog
+		self.savehashfile_dialog = gtk.glade.XML("parano.glade","filechooserdialog_savehashfile")
+		dialog = self.savehashfile_dialog.get_widget("filechooserdialog_savehashfile")
+		
+		filter = gtk.FileFilter()
+		for f in formats:
+			filter.add_pattern(f["pattern"])
+		dialog.set_filter(filter)
+		
 		result = dialog.run()
+		dialog.hide_all()
 		if result == gtk.RESPONSE_OK:
 			self.filename = dialog.get_filename()
 			
@@ -408,10 +454,8 @@ class Parano:
 				if result == gtk.RESPONSE_CANCEL:
 					# cancel
 					return
+			self.save_hashfile(self.filename)
 	
-			self.save_md5(self.filename)
-	
-		dialog.hide_all()
 
 	def on_addfile_activate(self, widget):
 		# addfile dialog
@@ -423,7 +467,7 @@ class Parano:
 			for f in dialog.get_filenames():
 				self.add_file(File(f,f))
 	
-		self.update_md5()
+		#self.update_md5()
 	
 		self.update_file_list()
 		dialog.hide_all()
@@ -483,14 +527,13 @@ class Parano:
 		
 		progress.hide_all()	
 					
-		if not self.abort:
-			self.update_md5()
+		#if not self.abort:
+			#self.update_md5()
 	
 		gtk_iteration()
 		if not self.abort:
-			self.update_file_list()
 			self.modified=True
-			self.update_title()
+			self.update_ui()
 
 		if self.abort:
 			# restore original file list
@@ -513,8 +556,8 @@ class Parano:
 			
 	def on_refresh(self, widget):
 		for f in self.files:
-			f.status = MD5_NOT_CHECKED
-		self.update_md5()
+			f.status = HASH_NOT_CHECKED
+		self.update_hashfile()
 
 	def init_window(self):
 		# main window
@@ -524,10 +567,10 @@ class Parano:
 				"on_addfile_activate" : self.on_addfile_activate,
 				"on_addfolder_activate" : self.on_addfolder_activate,
 				"on_remove_activate" : self.on_remove_activate,
-				"on_new_md5_activate" : self.on_new_md5_activate,
-				"on_load_md5_activate" : self.on_load_md5_activate,
-				"on_save_md5_activate" : self.on_save_md5_activate,
-				"on_save_as_md5_activate" : self.on_save_as_md5_activate,
+				"on_new_hashfile_activate" : self.on_new_hashfile_activate,
+				"on_load_hashfile_activate" : self.on_load_hashfile_activate,
+				"on_save_hashfile_activate" : self.on_save_hashfile_activate,
+				"on_save_as_hashfile_activate" : self.on_save_as_hashfile_activate,
 				"on_refresh" : self.on_refresh,
 				"on_quit_activate" : self.on_quit_activate,
 				"on_destroy" : self.on_destroy,
@@ -546,10 +589,10 @@ class Parano:
 		column.set_sort_column_id(COLUMN_ICON)
 		column.add_attribute(renderer, "stock_id", COLUMN_ICON)
 		
-		filelist.append_column(column)
-		column = gtk.TreeViewColumn("Hash", gtk.CellRendererText(),
-		                            text=COLUMN_HASH)
-		column.set_sort_column_id(COLUMN_HASH)
+		#filelist.append_column(column)
+		#column = gtk.TreeViewColumn("Hash", gtk.CellRendererText(),
+		#                            text=COLUMN_HASH)
+		#column.set_sort_column_id(COLUMN_HASH)
 		
 		#renderer = gtk.CellRendererText()
 		#column.pack_start(renderer, gtk.TRUE)
@@ -562,33 +605,34 @@ class Parano:
 		column.set_sort_column_id(COLUMN_FILE)
 		filelist.append_column(column)
 
-		self.liststore = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gobject.TYPE_STRING)
+		self.liststore = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING)
 		filelist.set_model(self.liststore)
 	
 
 	def __init__(self, initial_files=""):
 		self.init_window()		
-		self.new_md5()
+		self.new_hashfile()
 
-		number_md5=0
+		number_hashfile=0
 
 		for f in initial_files:
 			lower = string.lower(f)
+			# TODO: fix this
 			if string.rfind(lower,".md5") != -1:
 				print "loading md5:", f
-				self.load_md5(f)
-				number_md5=number_md5+1
+				self.load_hashfile(f)
+				number_hashfile=number_hashfile+1
 			else:
 				self.add_file(f)
 				
-		if number_md5>1:
+		if number_hashfile>1:
 			self.filename=""
 			
 		self.update_title()
 		self.modified=False
 		self.update_file_list()
-		if number_md5>0:
-			self.update_md5()
+		if number_hashfile>0:
+			self.update_hashfile()
 
 								
 	def main(self):
