@@ -76,6 +76,7 @@ class Parano:
 		try:
 			f = open(filename, 'rb');
 		except IOError:
+			print "HASHING ERROR", filename
 			return ""
 		
 		hasher = md5.new()
@@ -91,6 +92,8 @@ class Parano:
 				break
 			hasher.update(data)
 			self.progress_current_bytes=self.progress_current_bytes+BUFFER_SIZE
+
+		f.close()
 
 		return hasher.hexdigest()
 
@@ -151,8 +154,12 @@ class Parano:
 				if file[0] == "*":
 					# remove binary flag if present
 					file = file[1:]
-				
-				files_to_add.append(File(file, md5))
+
+				# convert filename from relative to md5 file to absolute
+				root = os.path.dirname(filename)
+				absfile = os.path.join(root, file)
+
+				files_to_add.append(File(absfile, md5))
 			
 		f.close()
 		
@@ -168,6 +175,7 @@ class Parano:
 		self.update_md5()
 				
 	def save_md5(self, filename):
+	
 		f = open(filename, "w")
 		remove = len(os.path.dirname(filename))+1
 		for ff in self.files:
@@ -176,6 +184,7 @@ class Parano:
 			f.write("%s *%s\n" % (ff.realMD5,filename))
 		f.close()
 		self.modified=False
+		self.filename=filename
 		self.update_title()
 
 	def add_file(self, filename, md5=""):
@@ -183,12 +192,10 @@ class Parano:
 		try:
 			size = os.path.getsize(filename)
 		except OSError:
-			#print _("Warning: cannot get size of file '%s'") % filename
+			print _("Warning: cannot get size of file '%s'") % filename
 			size = 0;
 		f = File(filename,md5,size)
 		self.files.append(f)
-		#self.modified=True
-		#self.update_title()
 
 	def update_title(self):
 		
@@ -215,14 +222,17 @@ class Parano:
 
 
 	def thread_update_md5(self):
+	
 		for f in self.files:
 			if self.abort:
 				# cancel button pressed
 				break
 
 			if f.status == MD5_NOT_CHECKED:
+					
 				# for progress
 				self.current_file = os.path.basename(f.filename)
+				
 				f.realMD5 = self.calculate_file_md5(f.filename)
 				self.progress_file=self.progress_file+1
 				
@@ -240,7 +250,7 @@ class Parano:
 						else:
 							# md5 mismatch
 							f.status = MD5_DIFFERENT
-					
+
 		# stop progress
 		self.progress_total_bytes=0
 
@@ -271,13 +281,14 @@ class Parano:
 		self.progress_file=0
 		self.current_file=""
 
-		self.progress_total_bytes=0
+		self.progress_total_bytes=666
 		for f in self.files:
 			self.progress_total_bytes=self.progress_total_bytes+f.size
 		self.progress_current_bytes=0
 
 		start=time.time()
 		thread.start_new_thread(self.thread_update_md5, ())
+		
 		while self.progress_total_bytes>0:
 			if not self.paused:
 				now=time.time()
@@ -370,7 +381,18 @@ class Parano:
 		dialog = self.savemd5_dialog.get_widget("filechooserdialog_savemd5")
 		result = dialog.run()
 		if result == gtk.RESPONSE_OK:
-			self.save_md5(dialog.get_filename())
+			self.filename = dialog.get_filename()
+			
+			if os.path.exists(self.filename):
+				dialog = gtk.glade.XML("parano.glade","dialog_overwrite_file")\
+							.get_widget("dialog_overwrite_file")
+				result = dialog.run()
+				dialog.hide_all()
+				if result == gtk.RESPONSE_CANCEL:
+					# cancel
+					return
+	
+			self.save_md5(self.filename)
 	
 		dialog.hide_all()
 
@@ -381,9 +403,7 @@ class Parano:
 		dialog = self.addfile_dialog_dlg = self.addfile_dialog.get_widget("filechooserdialog_addfile")
 		result = dialog.run()
 		if result == gtk.RESPONSE_OK:
-			#print "RESPONSE_OK"
 			for f in dialog.get_filenames():
-				#print "file:", f
 				self.add_file(f)
 	
 		self.update_md5()
