@@ -1,4 +1,4 @@
 #!/bin/sh
 cd "@datadir@"
-python "parano.py"
+python "parano.py" $*
 cd -
