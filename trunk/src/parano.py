@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Parano - GNOME HashFile Frontend
-# Copyright (C) 2005 Gautier Portet <kassoulet@gmail.com>
+# Copyright (C) 2005 Gautier Portet <kassoulet@users.berlios.de>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 PACKAGE="Parano"
 VERSION="0.2.0"
 URL="http://parano.berlios.de"
+
+DATADIR="@datadir@"
 
 import os, sys , time, string, re
 import thread
@@ -50,6 +52,10 @@ def log(*args):
 		for s in args:
 			ss += str(s)+" "
 		print ss
+		
+		f = file("/tmp/parano.log","a")
+		f.write(ss+"\n")
+		f.close()
 
 def debug(str):
 	print str
@@ -143,7 +149,7 @@ class FormatBase:
 		return list
 
 	def write_file(self, f, list):
-		comment = "Created by %s %s - %s" % (PACKAGE, VERSION, URL)
+		comment = "Created by %s %s - %s" % (NAME, VERSION, URL)
 		f.write(self.format_comment % comment)
 		for hash, file in list:
 			f.write(self.format_writer % locals())
@@ -373,8 +379,8 @@ class Parano:
 
 
 	def update_hashfile(self):
-
-		self.progress_dialog = dialog = gtk.glade.XML("parano.glade","hashing_progress")
+		glade = os.path.join(DATADIR, "parano.glade")
+		self.progress_dialog = dialog = gtk.glade.XML(glade,"hashing_progress")
 		progress = self.progress_dialog_dlg = dialog.get_widget("hashing_progress")
 		self.window_main.set_sensitive(False)
 		progress.set_transient_for(self.window_main)
@@ -455,7 +461,8 @@ class Parano:
 		# return False if we cannot touch hashfile contents
 		
 		if self.modified and len(self.files)>0:
-			dialog = gtk.glade.XML("parano.glade","dialog_save_changes")\
+			glade = os.path.join(DATADIR, "parano.glade")
+			dialog = gtk.glade.XML(glade,"dialog_save_changes")\
 						.get_widget("dialog_save_changes")
 			result = dialog.run()
 			dialog.hide_all()
@@ -490,9 +497,10 @@ class Parano:
 		
 	def on_about_activate(self, widget):
 		# about dialog
-		about_dialog = gtk.glade.XML("parano.glade","dialog_about")
+		glade = os.path.join(DATADIR, "parano.glade")
+		about_dialog = gtk.glade.XML(glade,"dialog_about")
 		dialog = about_dialog.get_widget("dialog_about")
-		dialog.set_property("name",PACKAGE)
+		dialog.set_property("name",NAME)
 		dialog.set_property("version",VERSION)
 
 	def on_new_hashfile_activate(self, widget):
@@ -506,7 +514,8 @@ class Parano:
 		if not self.discard_hashfile():
 			return
 
-		self.loadhashfile_dialog = gtk.glade.XML("parano.glade","filechooserdialog_loadhashfile")
+		glade = os.path.join(DATADIR, "parano.glade")
+		self.loadhashfile_dialog = gtk.glade.XML(glade,"filechooserdialog_loadhashfile")
 		dialog = self.loadhashfile_dialog.get_widget("filechooserdialog_loadhashfile")
 
 		filter = gtk.FileFilter()
@@ -532,7 +541,8 @@ class Parano:
 
 	def on_save_as_hashfile_activate(self, widget):
 		# save_as_hashfile dialog
-		self.savehashfile_dialog = gtk.glade.XML("parano.glade","filechooserdialog_savehashfile")
+		glade = os.path.join(DATADIR, "parano.glade")
+		self.savehashfile_dialog = gtk.glade.XML(glade,"filechooserdialog_savehashfile")
 		dialog = self.savehashfile_dialog.get_widget("filechooserdialog_savehashfile")
 		
 		filter = gtk.FileFilter()
@@ -546,7 +556,8 @@ class Parano:
 			self.filename = dialog.get_filename()
 			
 			if os.path.exists(self.filename):
-				dialog_ow = gtk.glade.XML("parano.glade","dialog_overwrite_file")\
+				glade = os.path.join(DATADIR, "parano.glade")
+				dialog_ow = gtk.glade.XML(glade,"dialog_overwrite_file")\
 							.get_widget("dialog_overwrite_file")
 				result = dialog_ow.run()
 				dialog_ow.hide_all()
@@ -558,7 +569,8 @@ class Parano:
 
 	def on_addfile_activate(self, widget):
 		# addfile dialog
-		self.addfile_dialog = gtk.glade.XML("parano.glade","filechooserdialog_addfile")
+		glade = os.path.join(DATADIR, "parano.glade")
+		self.addfile_dialog = gtk.glade.XML(glade,"filechooserdialog_addfile")
 			
 		dialog = self.addfile_dialog_dlg = self.addfile_dialog.get_widget("filechooserdialog_addfile")
 		result = dialog.run()
@@ -573,7 +585,8 @@ class Parano:
 		
 	def on_addfolder_activate(self, widget):
 		# addfolder dialog
-		self.addfolder_dialog = gtk.glade.XML("parano.glade","filechooserdialog_addfolder")
+		glade = os.path.join(DATADIR, "parano.glade")
+		self.addfolder_dialog = gtk.glade.XML(glade,"filechooserdialog_addfolder")
 
 		dialog = self.addfolder_dialog_dlg = self.addfolder_dialog.get_widget("filechooserdialog_addfolder")
 
@@ -587,7 +600,8 @@ class Parano:
 		gtk_iteration()
 
 	def add_folder(self, folder):
-		self.progress_dialog = gtk.glade.XML("parano.glade","addfolder_progress")
+		glade = os.path.join(DATADIR, "parano.glade")
+		self.progress_dialog = gtk.glade.XML(glade,"addfolder_progress")
 		
 		events = { "on_button_cancel_clicked" : self.on_addfolder_cancel }
 		self.progress_dialog.signal_autoconnect(events)
@@ -652,7 +666,9 @@ class Parano:
 
 	def init_window(self):
 		# main window
-		window = gtk.glade.XML("parano.glade","window_main")
+		
+		glade = os.path.join(DATADIR, "parano.glade")
+		window = gtk.glade.XML(glade,"window_main")
 		window.signal_autoconnect(self)
 		auto_connect(self, window)
 
@@ -705,7 +721,8 @@ class Parano:
 			f = f.strip("\r\n\x00",)
 						
 			if self.get_hashfile_format(f):
-					dialog = gtk.glade.XML("parano.glade","dialog_add_or_open")
+					glade = os.path.join(DATADIR, "parano.glade")
+					dialog = gtk.glade.XML(glade,"dialog_add_or_open")
 					dialog = dialog.get_widget("dialog_add_or_open")
 			
 					result = dialog.run()
@@ -777,13 +794,13 @@ if __name__ == "__main__":
 		("quiet"  , 'q'   , None ,   None  , 0    , 'Do not print any message on stdout'   , ""),
 	]
 
-	gnome.init(PACKAGE, VERSION, gnome.libgnome_module_info_get()) 
+	gnome.init(NAME, VERSION, gnome.libgnome_module_info_get()) 
 	
 	leftover, argdict = gnome.popt_parse(sys.argv, table)
 
 	if argdict["quiet"]: option_quiet = True
 		
-	log( PACKAGE +" "+ VERSION +" - ALPHA VERSION" )
+	log( NAME +" "+ VERSION)
 
 	parano = Parano(leftover)
 	parano.main()
