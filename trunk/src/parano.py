@@ -750,12 +750,15 @@ class Parano:
 
 		if len(initial_files) == 1:
 			# load hash file
+			log("One file specified, trying to load as HashFile.")
 			filename = initial_files[0]
 			if self.get_hashfile_format(filename):
+				log("HashFile detected, loading.")
 				self.load_hashfile(filename)
 				initial_files=[]
 		
 		for f in initial_files:
+			log("Adding file: "+f)
 			self.add_file(f)
 			
 		self.update_title()
@@ -800,8 +803,8 @@ if __name__ == "__main__":
 
 	if argdict["quiet"]: option_quiet = True
 		
-	log( NAME +" "+ VERSION)
-	log(DATADIR)
+	log(NAME +" "+ VERSION)
+	log("datadir: "+DATADIR)
 
 	parano = Parano(leftover)
 	parano.main()
