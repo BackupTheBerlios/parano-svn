@@ -118,6 +118,8 @@ class HasherCRC32:
 		self.crc = zlib.crc32(data,self.crc)
 		
 	def get_hash(self):
+		if self.crc < 0: # wtf? 
+			self.crc = -(self.crc^0xffffffff)-1
 		return "%08X" % self.crc
 
 class FormatBase:
@@ -362,7 +364,7 @@ class Parano:
 				# new file in md5
 				f.status = HASH_OK
 			else:	
-				#print self.current_file, f.real_hash, f.expected_hash
+				print self.current_file, f.real_hash, f.expected_hash
 				if f.real_hash.lower() == f.expected_hash.lower():
 					# matching md5
 					f.status = HASH_OK
