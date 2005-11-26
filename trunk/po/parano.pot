@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-03-03 01:36+0100\n"
+"POT-Creation-Date: 2005-06-15 22:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,49 +21,49 @@ msgstr ""
 msgid "Warning: cannot get size of file '%s'"
 msgstr ""
 
-#: ../src/parano.py:188
+#: ../src/parano.py:190
 msgid "Cannot read file: "
 msgstr ""
 
-#: ../src/parano.py:292
+#: ../src/parano.py:294
 msgid "Cannot store a md5 file in the hashed tree"
 msgstr ""
 
-#: ../src/parano.py:326
+#: ../src/parano.py:328
 msgid "Untitled Hashfile"
 msgstr ""
 
-#: ../src/parano.py:328
+#: ../src/parano.py:330
 #, python-format
 msgid "%s (Unsaved)"
 msgstr ""
 
-#: ../src/parano.py:341
+#: ../src/parano.py:343
 #, python-format
 msgid "<i>%s (Paused)</i>"
 msgstr ""
 
-#: ../src/parano.py:342
+#: ../src/parano.py:344
 msgid "Paused"
 msgstr ""
 
-#: ../src/parano.py:431
+#: ../src/parano.py:433
 #, python-format
 msgid "(%d:%02d Remaining)"
 msgstr ""
 
-#: ../src/parano.py:433
+#: ../src/parano.py:435
 #, python-format
 msgid "<b>%d / %d</b>"
 msgstr ""
 
 #. TODO: error
-#: ../src/parano.py:742
+#: ../src/parano.py:744
 #, python-format
 msgid "skipping dropped uri: %s"
 msgstr ""
 
-#: ../src/parano.py:773
+#: ../src/parano.py:778
 #, python-format
 msgid ""
 "<big><b>A programming error has been detected during the execution of this "
@@ -72,7 +72,7 @@ msgid ""
 "<tt><small>%s</small></tt>"
 msgstr ""
 
-#: ../src/parano.py:777
+#: ../src/parano.py:782
 msgid "Bug Detected"
 msgstr ""
 

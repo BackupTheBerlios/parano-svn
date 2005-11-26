@@ -22,7 +22,6 @@ VERSION="@version@"
 DATADIR="@datadir@"
 URL="http://parano.berlios.de"
 
-
 import os, sys , time, string, re
 import thread
 import md5, zlib
@@ -266,7 +265,7 @@ class Parano:
 		
 		# do add the files to list
 		for f in files_to_add:
-			self.add_file(f[0], f[1], f[2])
+			self.files.append(File(f[0], f[1], f[2]))
 		
 		self.filename=filename
 		self.update_ui()
@@ -446,11 +445,19 @@ class Parano:
 
 	def update_file_list(self):  
 		self.liststore.clear()
+		file_changed = False
 		for f in self.files:
 			iter = self.liststore.append()
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
+			if f.status not in (HASH_OK, HASH_NOT_CHECKED):
+				file_changed = True
 
+		if file_changed:
+			self.statusbar.push("Warning: files were modified!")
+		else:
+			self.statusbar.push("")
+		
 
 	def on_quit_activate(self, widget):
 		if not self.on_delete_event(widget):
@@ -696,7 +703,11 @@ class Parano:
 
 		self.liststore = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING)
 		filelist.set_model(self.liststore)
-	
+
+		# status bar
+		self.statusbar = window.get_widget("statusbar")
+
+
 		# we accept dropped files
 		filelist.drag_dest_set(gtk.DEST_DEFAULT_ALL,[
 			('text/uri-list',0,0),

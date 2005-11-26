@@ -1,18 +1,20 @@
+todo
+====
+
 * translation
 ? installation
-
-- glade wrapper
-- better progress
-
-- hash not generated after one generation
-  (save md5, then sfv...)
-
-- drag&drop from nautilus
-
 * nautilus scripts:
 	- generate sfv/md5 for this folder
 	- verify given sfv/md5
+* use gnome vfs
 
+
+done
+====
+- glade wrapper
+- better progress
+- hash not generated after one generation
+  (save md5, then sfv...)
+- drag&drop from nautilus
 - when dropping a hashfile, we want to verify it, not add it
 - verify if we ask for saving when we load a new hashfile
-* use gnome vfs

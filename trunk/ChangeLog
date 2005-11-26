@@ -1,3 +1,15 @@
+2005-11-26  Gautier Portet <kassoulet gmail com>
+
+	* Missing files are now marked as errors.
+	* Added a message in statusbar when loading a hash
+
+
+
+
+
+
+
+
 2005-02-24	added a dialog asking the user if he wants to
 save/cancel/dont_save when we clear/load/close the hashfile
 	
