@@ -1,0 +1,21 @@
+todo
+====
+
+* translation
+? installation
+* nautilus scripts:
+	- generate sfv/md5 for this folder
+	- verify given sfv/md5
+* use gnome vfs
+* redo the save system, current is broken when you don't want the sum to be in the same tree
+* we may to insert more than one folder :)
+
+done
+====
+- glade wrapper
+- better progress
+- hash not generated after one generation
+  (save md5, then sfv...)
+- drag&drop from nautilus
+- when dropping a hashfile, we want to verify it, not add it
+- verify if we ask for saving when we load a new hashfile
