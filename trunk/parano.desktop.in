@@ -9,4 +9,4 @@ Exec=parano %f
 Terminal=false
 Type=Application
 StartupNotify=true
-Categories=GNOME;Application;System;Utility;
+Categories=GNOME;Application;Cryptography;
