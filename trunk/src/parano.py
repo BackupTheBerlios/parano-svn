@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Parano - GNOME HashFile Frontend
-# Copyright (C) 2005 Gautier Portet <kassoulet@users.berlios.de>
+# Copyright (C) 2005-2006 Gautier Portet < kassoulet users.berlios.de >
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -445,18 +445,14 @@ class Parano:
 
 	def update_file_list(self):  
 		self.liststore.clear()
-		file_changed = False
+		files_changed = 0
 		for f in self.files:
 			iter = self.liststore.append()
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 			if f.status not in (HASH_OK, HASH_NOT_CHECKED):
-				file_changed = True
-
-		if file_changed:
-			self.statusbar.push("Warning: files were modified!")
-		else:
-			self.statusbar.push("")
+				files_changed += 1
+		return files_changed
 		
 
 	def on_quit_activate(self, widget):
@@ -539,7 +535,19 @@ class Parano:
 		if result == gtk.RESPONSE_OK:
 			self.load_hashfile(dialog.get_filename())
 	
-		self.update_file_list()
+		files_changed = self.update_file_list()
+
+		if files_changed:
+			self.statusbar.push(_("Warning: %d files were modified!") % files_changed)
+			dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
+				gtk.BUTTONS_OK, "")
+			dialog.set_title(_("File Corruption Detected"))
+			dialog.set_markup(_("<b>Integrity alert!</b>\n%d files have been corrupted since the hash file was created.") % files_changed)
+			dialog.run()
+			dialog.hide()
+			
+		else:
+			self.statusbar.push("HashFile loaded, all files are intact.")
 		
 	def on_save_hashfile_activate(self, widget):
 		# save_hashfile dialog
