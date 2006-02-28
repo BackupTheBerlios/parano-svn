@@ -35,7 +35,7 @@ _=gettext.gettext
 
 def gtk_iteration():
 	while gtk.events_pending():
-		gtk.main_iteration(gtk.FALSE)
+		gtk.main_iteration(False)
 
 def auto_connect(object, dialog):
 	for w in dialog.get_widget_prefix(''):
@@ -47,12 +47,10 @@ option_quiet = False
 
 def log(*args):
 	if not option_quiet:
-		ss = ""
-		for s in args:
-			ss += str(s)+" "
+		ss = " ".join(args)
 		print ss
 		
-		f = file("/tmp/parano.log","a")
+		f = file("parano.log","a")
 		f.write(ss+"\n")
 		f.close()
 
@@ -68,12 +66,14 @@ HASH_NOT_CHECKED=0	# hash not checked yet
 HASH_OK=1			# hash is as excepted
 HASH_ERROR=2		# cannot check hash
 HASH_DIFFERENT=3 	# hash is not what expected: file corrupted !
+HASH_MISSING=4		# file is missing
 
 icons = {
-	HASH_NOT_CHECKED	: None,
+	HASH_NOT_CHECKED	:  None,
 	HASH_OK			: gtk.STOCK_YES,
-	HASH_ERROR		: gtk.STOCK_DIALOG_WARNING,
+	HASH_ERROR		: gtk.STOCK_DIALOG_ERROR,
 	HASH_DIFFERENT	: gtk.STOCK_NO,
+	HASH_MISSING	: gtk.STOCK_MISSING_IMAGE	
 }
 
 class File:
@@ -96,7 +96,7 @@ class File:
 			try:
 				self.size = os.path.getsize(self.filename)
 			except OSError:
-				print _("Warning: cannot get size of file '%s'") % filename
+				log(_("Warning: cannot get size of file '%s'") % filename)
 				self.size = 0;
 
 class HasherMD5:
@@ -324,9 +324,10 @@ class Parano:
 		if self.filename != "":
 			title = os.path.basename(self.filename)
 		else:
-			title = _("Untitled Hashfile")
-		if self.modified:
-			title = _("%s (Unsaved)") % title
+			if self.modified:
+				title = _("Untitled Hashfile (Unsaved)")
+			else:
+				title = _("Untitled Hashfile")
 			
 		self.window_main.set_title(title)
 
@@ -369,8 +370,12 @@ class Parano:
 					f.status = HASH_OK
 				else:
 					if len(f.real_hash) == 0:
-						# cannot read file
-						f.status = HASH_ERROR
+						if os.path.exists(self.current_file):
+							# cannot read file
+							f.status = HASH_ERROR
+						else:
+							# file is missing
+							f.status = HASH_MISSING
 					else:
 						# md5 mismatch
 						f.status = HASH_DIFFERENT
@@ -437,22 +442,48 @@ class Parano:
 			gtk_iteration()
 			time.sleep(0.1)
 
-		log ( (total/(time.time()-start))/(1024*1024) , "MB/s")
+		log( "%.2f MiB/s" % (total/(time.time()-start)/(1024*1024)))
 
-		self.update_file_list()  
+		self.update_and_check_file_list()  
 		progress.hide_all()	
 		self.window_main.set_sensitive(True)
 
 	def update_file_list(self):  
 		self.liststore.clear()
-		files_changed = 0
+		changed, missing, error = 0,0,0
 		for f in self.files:
 			iter = self.liststore.append()
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
-			if f.status not in (HASH_OK, HASH_NOT_CHECKED):
-				files_changed += 1
-		return files_changed
+			if f.status == HASH_DIFFERENT:
+				changed += 1
+			if f.status == HASH_MISSING:
+				missing += 1
+			if f.status == HASH_ERROR:
+				error += 1
+		return changed, missing, error
+
+	def update_and_check_file_list(self):
+		changed, missing, error = self.update_file_list()
+		if changed or missing or error:
+			self.statusbar.push(_("Warning: %d files are different!") % (changed+missing+error))
+			dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
+				gtk.BUTTONS_OK, "")
+			dialog.set_title(_("File Corruption Detected"))
+			dialog.set_markup(_("<b>Integrity alert!</b>\n\n"
+				"Warning! <b>%d</b> files are different, details follows:\n" 
+				"  modified: <b>%d</b>\n"
+				"  missing: <b>%d</b>\n"
+				"  reading errors: <b>%d</b>\n"
+				"") % ( changed+missing+error, changed, missing, error))
+			dialog.run()
+			dialog.hide()
+			
+		else:
+			if self.files:
+				self.statusbar.push(_("%d files verified and ok.") % len(self.files))
+			else:	
+				self.statusbar.push(_("Ready."))
 		
 
 	def on_quit_activate(self, widget):
@@ -493,9 +524,9 @@ class Parano:
 		# with a "delete_event".
 		
 		if self.discard_hashfile():
-			return gtk.FALSE
+			return False 
 		else:
-			return gtk.TRUE
+			return True
 
 	def on_destroy(self, widget, data=None):
 		gtk.main_quit()
@@ -535,19 +566,8 @@ class Parano:
 		if result == gtk.RESPONSE_OK:
 			self.load_hashfile(dialog.get_filename())
 	
-		files_changed = self.update_file_list()
+		self.update_file_list()
 
-		if files_changed:
-			self.statusbar.push(_("Warning: %d files were modified!") % files_changed)
-			dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
-				gtk.BUTTONS_OK, "")
-			dialog.set_title(_("File Corruption Detected"))
-			dialog.set_markup(_("<b>Integrity alert!</b>\n%d files have been corrupted since the hash file was created.") % files_changed)
-			dialog.run()
-			dialog.hide()
-			
-		else:
-			self.statusbar.push("HashFile loaded, all files are intact.")
 		
 	def on_save_hashfile_activate(self, widget):
 		# save_hashfile dialog
@@ -727,8 +747,6 @@ class Parano:
 		
 		files = selection_data.data.split()
 		drag_context.drop_finish(True, timestamp)
-		
-		
 		
 		for f in files:
 		
