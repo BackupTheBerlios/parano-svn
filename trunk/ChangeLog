@@ -1,3 +1,11 @@
+2006-03-05  Gautier Portet <kassoulet gmail com>
+
+	* Trashed progressbar, we use a better statusbar now.
+
+2006-03-01  Gautier Portet <kassoulet gmail com>
+
+	* Current filename display in progress dialog are now correctly escaped. 
+
 2006-02-28  Gautier Portet <kassoulet gmail com>
 
 	* Some minor UI changes.

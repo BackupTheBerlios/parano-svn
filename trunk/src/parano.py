@@ -76,6 +76,16 @@ icons = {
 	HASH_MISSING	: gtk.STOCK_MISSING_IMAGE	
 }
 
+STATE_READY,STATE_HASHING,STATE_CORRECT,STATE_CORRUPTED = range(4)
+
+status_icons = {
+	STATE_READY	:  None,
+	STATE_HASHING	: gtk.STOCK_REFRESH,
+	STATE_CORRECT	: gtk.STOCK_DIALOG_AUTHENTICATION,
+	STATE_CORRUPTED	: gtk.STOCK_DIALOG_ERROR,
+}
+
+
 class File:
 	# File contained in hash file
 	def __init__(self, filename="", displayed_name="", expected_hash="", size=0):
@@ -180,7 +190,7 @@ class FormatSFV (FormatBase):
 formats = (FormatMD5(), FormatSFV())
 
 class Parano:
-
+	
 	def get_file_hash(self, filename):
 		# compute hash of given file	
 		try:
@@ -197,7 +207,9 @@ class Parano:
 				# paused, wait forever
 				gtk_iteration()
 				time.sleep(0.1)
-				
+			if self.abort:
+				return "aborted"
+		
 			data = f.read(BUFFER_SIZE)
 			if not data:
 				break
@@ -315,6 +327,15 @@ class Parano:
 		else:
 			log("error when tring to add: '%s'" % filename)
 
+	def set_status(self, text, icon=STATE_READY):
+		self.status_text = text
+		self.status_icon = icon
+		self.statusbar.set_text(text)
+		if self.status_icon == STATE_READY:
+			self.statusicon.set_from_pixbuf(None)
+		else:
+			self.statusicon.set_from_stock(status_icons[icon], gtk.ICON_SIZE_BUTTON)
+
 	def update_ui(self):
 		self.update_title()
 		self.update_file_list()
@@ -340,10 +361,10 @@ class Parano:
 		label_filename = self.progress_dialog.get_widget("label_filename")
 		progressbar = self.progress_dialog.get_widget("progressbar")
 		if self.paused:
-			label_filename.set_markup(_("<i>%s (Paused)</i>") % self.current_file)
+			label_filename.set_markup(_("<i>%s (Paused)</i>") % gobject.markup_escape_text(self.current_file))
 			progressbar.set_text(_("Paused"))
 		else:
-			label_filename.set_markup("<i>%s</i>" % self.current_file)
+			label_filename.set_markup("<i>%s</i>" % gobject.markup_escape_text(self.current_file))
 
 
 	def thread_update_hash(self):
@@ -364,7 +385,7 @@ class Parano:
 				# new file in md5
 				f.status = HASH_OK
 			else:	
-				print self.current_file, f.real_hash, f.expected_hash
+				#print self.current_file, f.real_hash, f.expected_hash
 				if f.real_hash.lower() == f.expected_hash.lower():
 					# matching md5
 					f.status = HASH_OK
@@ -385,10 +406,14 @@ class Parano:
 
 
 	def update_hashfile(self):
+
+		self.set_status(_("Hashing..."), STATE_HASHING)
 		glade = os.path.join(DATADIR, "parano.glade")
 		self.progress_dialog = dialog = gtk.glade.XML(glade,"hashing_progress")
 		progress = self.progress_dialog_dlg = dialog.get_widget("hashing_progress")
-		self.window_main.set_sensitive(False)
+		sensitive_widgets = ("menubar","toolbar","filelist")
+		for w in sensitive_widgets:
+			self.window.get_widget(w).set_sensitive(False)
 		progress.set_transient_for(self.window_main)
 
 		events = { 
@@ -396,12 +421,14 @@ class Parano:
 					"on_button_pause_clicked" : self.on_update_hash_pause 
 		}
 		dialog.signal_autoconnect(events)
-		progressbar = dialog.get_widget("progressbar")
-		progresslabel = dialog.get_widget("label_filename")
-		progressfiles = dialog.get_widget("label_files")
+		#progressbar = dialog.get_widget("progressbar")
+		progressbar = self.window.get_widget("progressbar")
+		progresslabel = self.statusbar
+		#progressfiles = self.window.get_widget("label_files")
+		progress = self.window.get_widget("progress_frame")
 
 		progresslabel.set_markup("")
-		progress.show()	
+		progress.show()
 
 		gtk_iteration()
 
@@ -422,9 +449,12 @@ class Parano:
 		thread.start_new_thread(self.thread_update_hash, ())
 		
 		while self.progress_total_bytes>0:
+			if self.abort:
+				progressbar.set_text(_("Cancelling..."))
+				break
 			if not self.paused:
 				now=time.time()
-				progresslabel.set_markup("<i>%s</i>" % self.current_file)
+				progresslabel.set_markup(_("Hashing %d/%d: <i>%s</i>") % (self.progress_file, self.progress_nbfiles, gobject.markup_escape_text(self.current_file)))
 				fraction = float(self.progress_current_bytes)/float(self.progress_total_bytes)
 				
 				if fraction>1.0:
@@ -437,16 +467,23 @@ class Parano:
 					text = _("(%d:%02d Remaining)") % (minutes, seconds)
 					progressbar.set_text(text)
 					text = _("<b>%d / %d</b>") % (self.progress_file, self.progress_nbfiles)
-					progressfiles.set_markup(text)
+					#progressfiles.set_markup(text)
 				
 			gtk_iteration()
 			time.sleep(0.1)
 
-		log( "%.2f MiB/s" % (total/(time.time()-start)/(1024*1024)))
-
-		self.update_and_check_file_list()  
 		progress.hide_all()	
+		if self.abort:
+			self.update_file_list()
+			log(_("Hashing aborted!"))
+			self.set_status(_("Aborted!"))
+		else:
+			self.update_and_check_file_list()
+		log( "hashed %d file(s) at %.2f MiB/s" % (len(self.files),total/(time.time()-start)/(1024*1024)))
+
 		self.window_main.set_sensitive(True)
+		for w in sensitive_widgets:
+			self.window.get_widget(w).set_sensitive(True)
 
 	def update_file_list(self):  
 		self.liststore.clear()
@@ -466,9 +503,11 @@ class Parano:
 	def update_and_check_file_list(self):
 		changed, missing, error = self.update_file_list()
 		if changed or missing or error:
-			self.statusbar.push(_("Warning: %d files are different!") % (changed+missing+error))
-			dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
+			self.set_status(_("Warning: %d files are different!") % (changed+missing+error),STATE_CORRUPTED)
+			"""dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
 				gtk.BUTTONS_OK, "")
+			dialog.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+			dialog.set_transient_for(self.window_main)
 			dialog.set_title(_("File Corruption Detected"))
 			dialog.set_markup(_("<b>Integrity alert!</b>\n\n"
 				"Warning! <b>%d</b> files are different, details follows:\n" 
@@ -478,12 +517,12 @@ class Parano:
 				"") % ( changed+missing+error, changed, missing, error))
 			dialog.run()
 			dialog.hide()
-			
+			"""
 		else:
 			if self.files:
-				self.statusbar.push(_("%d files verified and ok.") % len(self.files))
+				self.set_status(_("%d files verified and ok.") % len(self.files), STATE_CORRECT)
 			else:	
-				self.statusbar.push(_("Ready."))
+				self.set_status(_("Ready."))
 		
 
 	def on_quit_activate(self, widget):
@@ -705,7 +744,7 @@ class Parano:
 		# main window
 		
 		glade = os.path.join(DATADIR, "parano.glade")
-		window = gtk.glade.XML(glade,"window_main")
+		self.window = window = gtk.glade.XML(glade,"window_main")
 		window.signal_autoconnect(self)
 		auto_connect(self, window)
 
@@ -734,7 +773,10 @@ class Parano:
 
 		# status bar
 		self.statusbar = window.get_widget("statusbar")
+		self.statusbar = window.get_widget("label_status")
 
+		self.statusicon = window.get_widget("image_status")
+		self.statusicon.set_from_pixbuf(None)
 
 		# we accept dropped files
 		filelist.drag_dest_set(gtk.DEST_DEFAULT_ALL,[
