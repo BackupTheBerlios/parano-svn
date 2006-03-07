@@ -430,9 +430,11 @@ class Parano:
 		progresslabel = self.statusbar
 		#progressfiles = self.window.get_widget("label_files")
 		progress = self.window.get_widget("progress_frame")
+		#status = self.window.get_widget("status_frame")
 
 		progresslabel.set_markup("")
 		progress.show()
+		#status.hide()
 
 		gtk_iteration()
 
@@ -458,7 +460,7 @@ class Parano:
 				break
 			if not self.paused:
 				now=time.time()
-				progresslabel.set_markup(_("Hashing %d/%d: <i>%s</i>") % (self.progress_file, self.progress_nbfiles, gobject.markup_escape_text(self.current_file)))
+				progresslabel.set_markup(_("Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>") % (self.progress_file, self.progress_nbfiles, gobject.markup_escape_text(self.current_file)))
 				fraction = float(self.progress_current_bytes)/float(self.progress_total_bytes)
 				
 				if fraction>1.0:
@@ -470,13 +472,14 @@ class Parano:
 					seconds = remaining%60
 					text = _("(%d:%02d Remaining)") % (minutes, seconds)
 					progressbar.set_text(text)
-					text = _("<b>%d / %d</b>") % (self.progress_file, self.progress_nbfiles)
+					#text = _("<b>%d / %d</b>") % (self.progress_file, self.progress_nbfiles)
 					#progressfiles.set_markup(text)
 				
 			gtk_iteration()
 			time.sleep(0.1)
 
 		progress.hide_all()	
+		#status.show()
 		if self.abort:
 			self.update_file_list()
 			log(_("Hashing aborted!"))
