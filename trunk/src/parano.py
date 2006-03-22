@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -tt
 
 # Parano - GNOME HashFile Frontend
 # Copyright (C) 2005-2006 Gautier Portet < kassoulet users.berlios.de >
@@ -17,6 +17,38 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+"""
+gnomevfs migration notes
+gnomevfs.URI
+	append_file_name()
+	append_path()
+	append_string()
+	resolve_relative()
+	dirname is_local path toplevel
+gnomevfs.Handle(uri, gnomevfs.OPEN_READ)
+	close()
+	get_file_info()
+	read()
+	seek(offset, gnomevfs.SEEK_START)
+	tell()
+	write()
+
+gnomevfs.escape_[path_]string()
+gnomevfs.unescape_string_for_display()
+gnomevfs.format_string_for_display()
+gnomevfs.exists(uri)
+
+handling of relative path:
+paths are relative to hashfile by default.
+but may be absolute, so be careful
+
+when saving, convert all filenames to path relative to the base of the hashfile.
+maybe we want an option to save absolute paths, by is there a need ?
+
+
+"""
+
+
 NAME="Parano"
 VERSION="@version@"
 DATADIR="@datadir@"
@@ -27,7 +59,7 @@ import thread
 import md5, zlib
 import pygtk
 pygtk.require('2.0')
-import gobject, gtk, gtk.glade, gnome, gnome.ui
+import gobject, gtk, gtk.glade, gnome, gnome.ui, gnomevfs
 import cStringIO, traceback
 import urllib
 import gettext
@@ -56,6 +88,95 @@ def log(*args):
 
 def debug(str):
 	print str
+
+def vfs_clean_uri(uri):
+	#print "cleaning:", uri
+	#if not gnomevfs.exists(uri):
+	try:
+		gnomevfs.URI(uri)
+		gnomevfs.Handle(uri)
+		#print "  ok"
+	except : #gnomevfs.InvalidURIError:
+		# maybe a local path ?
+		print "  no handle"
+		local = os.path.abspath(uri)
+		if os.path.exists(local):
+			print "  local"
+			uri = gnomevfs.get_uri_from_local_path(local)
+		uri = gnomevfs.escape_host_and_path_string(uri)
+		print "cleaned:", uri
+	return uri
+
+def vfs_open(uri, mode="r"):
+	try:
+		uri = vfs_clean_uri(uri)
+		uri = gnomevfs.URI(uri)
+		f = gnomevfs.Handle(uri)
+		return f
+	except None:
+		pass
+		#print "Cannot load '%s'" % gnomevfs.format_uri_for_display(str(uri))
+		print "Cannot load '%s'" % str(uri)
+
+def vfs_walk(uri):
+	"""similar to os.path.walk, but with gnomevfs.
+	
+	uri -- the base folder uri.
+	return a list of uri.
+	
+	"""
+
+	if not isinstance(uri, gnomevfs.URI):
+		uri = gnomevfs.URI(uri)
+
+	if str(uri)[-1] != '/':
+		uri = uri.append_string("/")
+
+	info = gnomevfs.get_file_info(uri, gnomevfs.FILE_INFO_GET_MIME_TYPE)
+	filelist = []	
+
+	try:
+		dirlist = gnomevfs.open_directory(uri)
+	except:
+		pass
+		log(_("skipping: '%s'") % uri)
+		return filelist
+		
+	for file_info in dirlist:
+		if file_info.name[0] == ".":
+			continue
+	
+		if file_info.type == gnomevfs.FILE_TYPE_DIRECTORY:
+			filelist.extend(
+				vfs_walk(uri.append_path(file_info.name)) )
+
+		if file_info.type == gnomevfs.FILE_TYPE_REGULAR:
+			filelist.append( str(uri.append_file_name(file_info.name)) )
+	return filelist
+
+def vfs_makedirs(path_to_create):
+	"""Similar to os.makedirs, but with gnomevfs"""
+	
+	uri = gnomevfs.URI(path_to_create)
+	path = uri.path
+
+	# start at root
+	uri =  uri.resolve_relative("/")
+	
+	for folder in path.split("/"):
+		if not folder:
+			continue
+		uri = uri.append_string(folder)
+		try:
+			gnomevfs.make_directory(uri, 0777)
+		except gnomevfs.FileExistsError:
+			pass
+		except :
+			return False
+	return True	
+
+
+
 
 COLUMN_ICON=0
 COLUMN_FILE=1
@@ -108,8 +229,10 @@ class File:
 
 		if not size:
 			try:
-				self.size = os.path.getsize(self.filename)
-			except OSError:
+				#self.size = os.path.getsize(self.filename)
+				info = gnomevfs.get_file_info(self.filename, gnomevfs.FILE_INFO_FIELDS_SIZE)
+				self.size = info.size
+			except:
 				log(_("Warning: cannot get size of file '%s'") % filename)
 				self.size = 0;
 
@@ -137,6 +260,7 @@ class HasherCRC32:
 
 class FormatBase:
 	def detect_file(self, f):
+		
 		for line in f:
 			line = line.strip()
 			result = self.regex_reader.search(line)
@@ -151,6 +275,7 @@ class FormatBase:
 		
 	def read_file(self, f):
 		list = []
+
 		for line in f:
 			line = line.strip()
 			result = self.regex_reader.search(line)
@@ -176,7 +301,7 @@ class FormatMD5 (FormatBase):
 		self.filename_regex = re.compile(r".*\.md5(sum)?")
 		self.hasher = HasherMD5()
 
-		self.regex_reader = re.compile(r";.*|#.*|^(?P<hash>[\dA-Fa-f]{32}) \*?(?P<file>.*$)|^\s*$")
+		self.regex_reader = re.compile(r";.*|#.*|\\?^(?P<hash>[\dA-Fa-f]{32}) [\* ]?(?P<file>.*$)\\?|^\s*$")
 		self.format_writer = "%(hash)s *%(file)s\n"
 		self.format_comment= "; %s\n"
 
@@ -195,13 +320,13 @@ formats = (FormatMD5(), FormatSFV())
 
 class Parano:
 	
-	def get_file_hash(self, filename):
-		# compute hash of given file	
-		try:
-			f = open(filename, 'rb');
-		except IOError:
-			log( _("Cannot read file: "), filename)
-			return ""
+	def get_file_hash(self, uri):
+		# compute hash of given file
+		#print "get_file_hash:", uri
+		f = vfs_open(uri)
+		if not f:
+			log( _("Cannot read uri: "), uri)
+			return ""	
 		
 		hasher = self.format.hasher
 		hasher.init()
@@ -214,8 +339,9 @@ class Parano:
 			if self.abort:
 				return "aborted"
 		
-			data = f.read(BUFFER_SIZE)
-			if not data:
+			try:
+				data = f.read(BUFFER_SIZE)
+			except :
 				break
 			hasher.update(data)
 			self.progress_current_bytes=self.progress_current_bytes+BUFFER_SIZE
@@ -232,47 +358,49 @@ class Parano:
 		self.modified=False
 		self.update_title()
 
-	def get_hashfile_format(self, filename):
+	def get_hashfile_format(self, uri, content):
 	
 		try:
-			f = open(filename, "r")
-	
+			pass
+		except:
+			pass
+		if True:
+			
 			for format in formats:
 				# search in al our recognized formats
 				regex = format.filename_regex
-				result = regex.search(filename.lower())
+				result = regex.search(uri.lower())
 				if result:
 					# this can be a valid filename, now look inside
-					f.seek(0)
-					if format.detect_file(f):
+					if format.detect_file(content):
 						# yes, this is a valid hashfile \o/
-						f.close()
 						return format
-					
-			f.close()
-		except IOError:
+		try:
+			pass
+		except gnomevfs.InvalidURIError:
 			pass
 			
 		return None
 
-	def load_hashfile(self, filename):
+	def load_hashfile(self, uri):
 		# load hashfile
 
+		uri = vfs_clean_uri(uri)
+		content = gnomevfs.read_entire_file(uri)
+		lines = content.split("\n")
+		
 		files_to_add=[]
-		self.format=self.get_hashfile_format(filename)
+		self.format=self.get_hashfile_format(uri, lines)
 				
 		if not self.format:
 			log("unknown format")
-			f.close()
 			return
 		log("Detected format: " + self.format.name)
 				
-		f = open(filename, "r")
-		list = self.format.read_file(f)
-		f.close()
+		list = self.format.read_file(lines)
 	
 		for hash, file in list:
-			root = os.path.dirname(filename)
+			root = os.path.dirname(uri)
 			absfile = os.path.join(root, file)
 			files_to_add.append( (absfile, file, hash) )
 		
@@ -283,15 +411,16 @@ class Parano:
 		for f in files_to_add:
 			self.files.append(File(f[0], f[1], f[2]))
 		
-		self.filename=filename
+		self.filename=uri
 		self.update_ui()
 		self.update_hashfile()
+		return True
 
-	def save_hashfile(self, filename):
+	def save_hashfile(self, uri):
 
 		for format in formats:
 			regex = format.filename_regex
-			result = regex.search(filename)
+			result = regex.search(uri)
 			if result:
 				self.format = format
 				log("Saving with format:", format.name)
@@ -300,36 +429,53 @@ class Parano:
 		self.update_hashfile()
 
 		list=[]
-		remove = len(os.path.dirname(filename))+1
+		base = os.path.dirname(uri)
+		remove = len(base)+1
 		for ff in self.files:
 			# convert to a path relative to hashfile
-			if len(ff.filename)<remove:
+			if ff.filename[:remove-1] != base:
 				# TODO: better error detection
 				dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, 
-							_("Cannot store a md5 file in the hashed tree"))
+							_("Cannot save the hash outside the folders containing the files.\n'%s' must be stored in the '%s' folder."
+								) % (gnomevfs.unescape_string_for_display(ff.filename), 
+								gnomevfs.unescape_string_for_display(base)))
 				dialog.run()
 				dialog.hide_all()
 				return
-			file = ff.filename[remove:]
+			file = gnomevfs.unescape_string_for_display(ff.filename[remove:])
 			hash = ff.real_hash
 			list.append( (hash,file) )
 			
-		
-		f = open(filename, "w")
+		u = gnomevfs.URI(uri)
+		print "saving to:", u
+		f = gnomevfs.create(u , gnomevfs.OPEN_WRITE)
+		#f = open(filename, "w")
 		self.format.write_file(f, list)
 		f.close()
 		
 		self.modified=False
-		self.filename=filename
+		self.filename=uri
 		self.update_title()
 
 	def add_file(self, filename, displayed_name="", hash=""):
-		if os.path.isfile(filename):
+	
+		print "  add:", filename , self.filename, gnomevfs.FILE_INFO_FIELDS_SIZE
+		info = gnomevfs.get_file_info(filename, gnomevfs.FILE_INFO_FIELDS_SIZE)
+		print info.size, info.type
+
+		if info.type == gnomevfs.FILE_TYPE_REGULAR:
 			self.files.append(File(filename, displayed_name, hash))
-		elif os.path.isdir(filename):
+		elif info.type == gnomevfs.FILE_TYPE_DIRECTORY:
 			self.add_folder(filename)
 		else:
 			log("error when tring to add: '%s'" % filename)
+
+		#if os.path.isfile(filename):
+		#	self.files.append(File(filename, displayed_name, hash))
+		#elif os.path.isdir(filename):
+		#	self.add_folder(filename)
+		#else:
+		#	log("error when tring to add: '%s'" % filename)
 
 	def set_status(self, text, icon=STATE_READY):
 		self.status_text = text
@@ -452,7 +598,8 @@ class Parano:
 
 		start=time.time()
 		total = self.progress_total_bytes
-		thread.start_new_thread(self.thread_update_hash, ())
+		#thread.start_new_thread(self.thread_update_hash, ())
+		self.thread_update_hash()
 		
 		while self.progress_total_bytes>0:
 			if self.abort:
@@ -495,8 +642,14 @@ class Parano:
 	def update_file_list(self):  
 		self.liststore.clear()
 		changed, missing, error = 0,0,0
+
+		common = os.path.commonprefix([f.displayed_name for f in self.files])		
+		#print "common: '%s'" % common
+		print "update file list"
+
 		for f in self.files:
 			iter = self.liststore.append()
+			#self.liststore.set(iter, COLUMN_FILE, f.displayed_name[len(common):])
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 			if f.status == HASH_DIFFERENT:
@@ -610,7 +763,7 @@ class Parano:
 		result = dialog.run()
 		dialog.hide_all()
 		if result == gtk.RESPONSE_OK:
-			self.load_hashfile(dialog.get_filename())
+			self.load_hashfile(dialog.get_uri())
 	
 		self.update_file_list()
 
@@ -636,7 +789,7 @@ class Parano:
 		result = dialog.run()
 		dialog.hide_all()
 		if result == gtk.RESPONSE_OK:
-			self.filename = dialog.get_filename()
+			self.filename = dialog.get_uri()
 			
 			if os.path.exists(self.filename):
 				glade = os.path.join(DATADIR, "parano.glade")
@@ -658,7 +811,7 @@ class Parano:
 		dialog = self.addfile_dialog_dlg = self.addfile_dialog.get_widget("filechooserdialog_addfile")
 		result = dialog.run()
 		if result == gtk.RESPONSE_OK:
-			for f in dialog.get_filenames():
+			for f in dialog.get_uris():
 				self.add_file(f)
 	
 		self.update_file_list()
@@ -704,17 +857,22 @@ class Parano:
 		# save current files list
 		backup = self.files[:]
 		t=0
-		for root, dirs, files in os.walk(folder):
+		files = []
+		for uri in vfs_walk(folder):
+			files.append(uri)
+		
+		prefix = os.path.commonprefix(files)
+		visible = 0
+		if prefix:
+			visible = len(prefix)
+
+		for uri in files:
 			if time.time()-t >= 0.1:
 				t = time.time()
-				progresslabel.set_markup("<small><i>%s</i></small>" % root)
+				progresslabel.set_markup("<small><i>%s</i></small>" % uri)
 				progressbar.pulse()
 			gtk_iteration()
-			for name in files:
-				f = os.path.join(root, name)
-				self.add_file(f)
-				if self.abort:
-					break
+			self.add_file(uri, gnomevfs.unescape_string_for_display(uri[visible:]))
 			if self.abort:
 				break
 	
@@ -840,10 +998,10 @@ class Parano:
 			# load hash file
 			log("One file specified, trying to load as HashFile.")
 			filename = initial_files[0]
-			if self.get_hashfile_format(filename):
-				log("HashFile detected, loading.")
-				self.load_hashfile(filename)
-				initial_files=[]
+			#if self.get_hashfile_format(filename):
+			#	log("HashFile detected, loading.")
+			self.load_hashfile(filename)
+			initial_files=[]
 		
 		for f in initial_files:
 			log("Adding file: "+f)

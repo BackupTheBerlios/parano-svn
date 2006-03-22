@@ -1,3 +1,12 @@
+2006-03-22  Gautier Portet <kassoulet gmail com>
+
+	* more gnomevfs magic added.
+	* fix loading of .md5 with the line between \ chars.
+
+2006-03-09  Gautier Portet <kassoulet gmail com>
+
+	* Started using gnomevfs.
+
 2006-03-05  Gautier Portet <kassoulet gmail com>
 
 	* Trashed progressbar, we use a better statusbar now.
