@@ -90,7 +90,8 @@ def debug(str):
 	print str
 
 def vfs_clean_uri(uri):
-	#print "cleaning:", uri
+	#print "NOT cleaning:", uri
+	#return uri
 	#if not gnomevfs.exists(uri):
 	try:
 		gnomevfs.URI(uri)
@@ -385,7 +386,12 @@ class Parano:
 	def load_hashfile(self, uri):
 		# load hashfile
 
+		
 		uri = vfs_clean_uri(uri)
+		
+		#uri = gnomevfs.make_uri_from_input(uri)
+		print "loading:", uri
+		
 		content = gnomevfs.read_entire_file(uri)
 		lines = content.split("\n")
 		
@@ -398,11 +404,14 @@ class Parano:
 		log("Detected format: " + self.format.name)
 				
 		list = self.format.read_file(lines)
-	
+
+		root = os.path.dirname(uri)
+		
 		for hash, file in list:
-			root = os.path.dirname(uri)
 			absfile = os.path.join(root, file)
-			files_to_add.append( (absfile, file, hash) )
+			uri = gnomevfs.make_uri_from_input(absfile)
+			print " file:", absfile, " > uri:", uri
+			files_to_add.append( (uri, file, hash) )
 		
 		# reset hashfile
 		self.new_hashfile()
@@ -459,9 +468,7 @@ class Parano:
 
 	def add_file(self, filename, displayed_name="", hash=""):
 	
-		print "  add:", filename , self.filename, gnomevfs.FILE_INFO_FIELDS_SIZE
 		info = gnomevfs.get_file_info(filename, gnomevfs.FILE_INFO_FIELDS_SIZE)
-		print info.size, info.type
 
 		if info.type == gnomevfs.FILE_TYPE_REGULAR:
 			self.files.append(File(filename, displayed_name, hash))
@@ -469,13 +476,6 @@ class Parano:
 			self.add_folder(filename)
 		else:
 			log("error when tring to add: '%s'" % filename)
-
-		#if os.path.isfile(filename):
-		#	self.files.append(File(filename, displayed_name, hash))
-		#elif os.path.isdir(filename):
-		#	self.add_folder(filename)
-		#else:
-		#	log("error when tring to add: '%s'" % filename)
 
 	def set_status(self, text, icon=STATE_READY):
 		self.status_text = text
@@ -571,12 +571,9 @@ class Parano:
 					"on_button_pause_clicked" : self.on_update_hash_pause 
 		}
 		dialog.signal_autoconnect(events)
-		#progressbar = dialog.get_widget("progressbar")
 		progressbar = self.window.get_widget("progressbar")
 		progresslabel = self.statusbar
-		#progressfiles = self.window.get_widget("label_files")
 		progress = self.window.get_widget("progress_frame")
-		#status = self.window.get_widget("status_frame")
 
 		progresslabel.set_markup("")
 		progress.show()
@@ -598,8 +595,8 @@ class Parano:
 
 		start=time.time()
 		total = self.progress_total_bytes
-		#thread.start_new_thread(self.thread_update_hash, ())
-		self.thread_update_hash()
+		thread.start_new_thread(self.thread_update_hash, ())
+		#self.thread_update_hash()
 		
 		while self.progress_total_bytes>0:
 			if self.abort:
@@ -607,7 +604,7 @@ class Parano:
 				break
 			if not self.paused:
 				now=time.time()
-				progresslabel.set_markup(_("Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>") % (self.progress_file, self.progress_nbfiles, gobject.markup_escape_text(self.current_file)))
+				progresslabel.set_markup(_("Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>") % (self.progress_file, self.progress_nbfiles, gobject.markup_escape_text(gnomevfs.unescape_string_for_display(self.current_file))))
 				fraction = float(self.progress_current_bytes)/float(self.progress_total_bytes)
 				
 				if fraction>1.0:
@@ -831,11 +828,15 @@ class Parano:
 		gtk_iteration()
 	
 		if result == gtk.RESPONSE_OK:
-			self.add_folder(dialog.get_filename())
+			uris = dialog.get_uris()
+			base = os.path.commonprefix(uris)
+			for uri in uris:
+				self.add_folder(uri, base)
 			
 		gtk_iteration()
 
-	def add_folder(self, folder):
+	def add_folder(self, folder, prefix=None):
+		print "adding folder:", folder
 		glade = os.path.join(DATADIR, "parano.glade")
 		self.progress_dialog = gtk.glade.XML(glade,"addfolder_progress")
 		
@@ -860,8 +861,14 @@ class Parano:
 		files = []
 		for uri in vfs_walk(folder):
 			files.append(uri)
-		
-		prefix = os.path.commonprefix(files)
+	
+		if not prefix:
+			prefix = os.path.commonprefix(files)
+			
+		if prefix[-1] != "/":
+			prefix = prefix + "/"
+			
+		print "prefix: %s" % prefix
 		visible = 0
 		if prefix:
 			visible = len(prefix)
@@ -872,7 +879,8 @@ class Parano:
 				progresslabel.set_markup("<small><i>%s</i></small>" % uri)
 				progressbar.pulse()
 			gtk_iteration()
-			self.add_file(uri, gnomevfs.unescape_string_for_display(uri[visible:]))
+			#self.add_file(uri, gnomevfs.unescape_string_for_display(uri[visible:]))
+			self.add_file(uri, gnomevfs.unescape_string_for_display(uri))
 			if self.abort:
 				break
 	

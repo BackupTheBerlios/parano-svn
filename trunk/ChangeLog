@@ -1,7 +1,13 @@
+2006-03-23  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: fix display of files when added with folders.
+
 2006-03-22  Gautier Portet <kassoulet gmail com>
 
 	* more gnomevfs magic added.
 	* fix loading of .md5 with the line between \ chars.
+	* Allow selecting multiples folders in 'add folder' dialog.
+	* Allow selection non-local files in 'add' dialogs
 
 2006-03-09  Gautier Portet <kassoulet gmail com>
 

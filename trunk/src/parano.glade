@@ -589,7 +589,7 @@
 <widget class="GtkFileChooserDialog" id="filechooserdialog_addfile">
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
-  <property name="local_only">True</property>
+  <property name="local_only">False</property>
   <property name="select_multiple">True</property>
   <property name="show_hidden">False</property>
   <property name="do_overwrite_confirmation">False</property>
@@ -600,7 +600,7 @@
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
   <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_taskbar_hint">True</property>
   <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
@@ -662,8 +662,8 @@
 <widget class="GtkFileChooserDialog" id="filechooserdialog_addfolder">
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>
-  <property name="local_only">True</property>
-  <property name="select_multiple">False</property>
+  <property name="local_only">False</property>
+  <property name="select_multiple">True</property>
   <property name="show_hidden">False</property>
   <property name="do_overwrite_confirmation">False</property>
   <property name="title" translatable="yes">Add Folder</property>
@@ -673,7 +673,7 @@
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
   <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_taskbar_hint">True</property>
   <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
@@ -734,7 +734,7 @@
 <widget class="GtkFileChooserDialog" id="filechooserdialog_savehashfile">
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_SAVE</property>
-  <property name="local_only">True</property>
+  <property name="local_only">False</property>
   <property name="select_multiple">False</property>
   <property name="show_hidden">False</property>
   <property name="do_overwrite_confirmation">False</property>
@@ -745,7 +745,7 @@
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
   <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_taskbar_hint">True</property>
   <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
@@ -1162,7 +1162,7 @@
 <widget class="GtkFileChooserDialog" id="filechooserdialog_loadhashfile">
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
-  <property name="local_only">True</property>
+  <property name="local_only">False</property>
   <property name="select_multiple">False</property>
   <property name="show_hidden">False</property>
   <property name="do_overwrite_confirmation">False</property>
@@ -1457,7 +1457,7 @@ if you don't save, changes will be discarded</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
   <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_taskbar_hint">True</property>
   <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
@@ -1642,7 +1642,7 @@ The file already exists, do you want to replace it with the new one you are savi
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
   <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_taskbar_hint">True</property>
   <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
@@ -1777,7 +1777,7 @@ The file already exists, do you want to replace it with the new one you are savi
   <property name="destroy_with_parent">True</property>
   <property name="decorated">True</property>
   <property name="skip_taskbar_hint">True</property>
-  <property name="skip_pager_hint">True</property>
+  <property name="skip_pager_hint">False</property>
   <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
