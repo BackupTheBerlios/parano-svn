@@ -1,3 +1,7 @@
+2006-03-27  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: fix some gnomevfs problems.
+
 2006-03-23  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: fix display of files when added with folders.

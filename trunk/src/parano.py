@@ -90,7 +90,7 @@ def debug(str):
 	print str
 
 def vfs_clean_uri(uri):
-	#print "NOT cleaning:", uri
+	#print "cleaning:", uri
 	#return uri
 	#if not gnomevfs.exists(uri):
 	try:
@@ -358,6 +358,7 @@ class Parano:
 		self.liststore.clear()
 		self.modified=False
 		self.update_title()
+		self.set_status(_("Ready"))
 
 	def get_hashfile_format(self, uri, content):
 	
@@ -385,12 +386,7 @@ class Parano:
 
 	def load_hashfile(self, uri):
 		# load hashfile
-
-		
 		uri = vfs_clean_uri(uri)
-		
-		#uri = gnomevfs.make_uri_from_input(uri)
-		print "loading:", uri
 		
 		content = gnomevfs.read_entire_file(uri)
 		lines = content.split("\n")
@@ -409,8 +405,7 @@ class Parano:
 		
 		for hash, file in list:
 			absfile = os.path.join(root, file)
-			uri = gnomevfs.make_uri_from_input(absfile)
-			print " file:", absfile, " > uri:", uri
+			uri = gnomevfs.escape_host_and_path_string(absfile)
 			files_to_add.append( (uri, file, hash) )
 		
 		# reset hashfile
@@ -423,6 +418,7 @@ class Parano:
 		self.filename=uri
 		self.update_ui()
 		self.update_hashfile()
+		self.set_status(_("Ready"))
 		return True
 
 	def save_hashfile(self, uri):
@@ -465,6 +461,7 @@ class Parano:
 		self.modified=False
 		self.filename=uri
 		self.update_title()
+		self.set_status(_("Saved"))
 
 	def add_file(self, filename, displayed_name="", hash=""):
 	
