@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
 """
 gnomevfs migration notes
 gnomevfs.URI
@@ -184,11 +183,11 @@ COLUMN_FILE=1
 
 BUFFER_SIZE=1024*64
 
-HASH_NOT_CHECKED=0	# hash not checked yet
-HASH_OK=1			# hash is as excepted
+HASH_DIFFERENT=0	# hash is not what expected: file corrupted !
+HASH_MISSING=1		# file is missing
 HASH_ERROR=2		# cannot check hash
-HASH_DIFFERENT=3 	# hash is not what expected: file corrupted !
-HASH_MISSING=4		# file is missing
+HASH_OK=3			# hash is as excepted
+HASH_NOT_CHECKED=4	# hash not checked yet
 
 icons = {
 	HASH_NOT_CHECKED	:  None,
@@ -416,9 +415,9 @@ class Parano:
 			self.files.append(File(f[0], f[1], f[2]))
 		
 		self.filename=uri
-		self.update_ui()
 		self.update_hashfile()
-		self.set_status(_("Ready"))
+		self.update_ui()
+		self.update_and_check_file_list()
 		return True
 
 	def save_hashfile(self, uri):
@@ -640,6 +639,9 @@ class Parano:
 		common = os.path.commonprefix([f.displayed_name for f in self.files])		
 		#print "common: '%s'" % common
 		print "update file list"
+
+		# sort by status
+		self.files.sort(key=lambda x: x.status)
 
 		for f in self.files:
 			iter = self.liststore.append()

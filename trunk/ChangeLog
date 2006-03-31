@@ -1,3 +1,8 @@
+2006-03-31  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Display file list ordered by status. So corrupted files
+	  appear first, then missing ones, etc...
+
 2006-03-27  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: fix some gnomevfs problems.
