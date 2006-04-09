@@ -78,7 +78,7 @@ option_quiet = False
 
 def log(*args):
 	if not option_quiet:
-		ss = " ".join(args)
+		ss = " ".join([str(a) for a in args])
 		print ss
 		
 		f = file("parano.log","a")
@@ -302,7 +302,7 @@ class FormatMD5 (FormatBase):
 		self.hasher = HasherMD5()
 
 		self.regex_reader = re.compile(r";.*|#.*|\\?^(?P<hash>[\dA-Fa-f]{32}) [\* ]?(?P<file>.*$)\\?|^\s*$")
-		self.format_writer = "%(hash)s *%(file)s\n"
+		self.format_writer = "%(hash)s *%(file)s\n" 
 		self.format_comment= "; %s\n"
 
 class FormatSFV (FormatBase):
@@ -323,10 +323,12 @@ class Parano:
 	def get_file_hash(self, uri):
 		# compute hash of given file
 		#print "get_file_hash:", uri
-		f = vfs_open(uri)
-		if not f:
-			log( _("Cannot read uri: "), uri)
-			return ""	
+		try:
+			f = vfs_open(uri)
+		except gnomevfs.NotFoundError:
+			log( _("Cannot read file: '%s'") % uri)
+			return ""
+
 		
 		hasher = self.format.hasher
 		hasher.init()
@@ -451,7 +453,7 @@ class Parano:
 			list.append( (hash,file) )
 			
 		u = gnomevfs.URI(uri)
-		print "saving to:", u
+		log("saving to:", u)
 		f = gnomevfs.create(u , gnomevfs.OPEN_WRITE)
 		#f = open(filename, "w")
 		self.format.write_file(f, list)
@@ -638,7 +640,7 @@ class Parano:
 
 		common = os.path.commonprefix([f.displayed_name for f in self.files])		
 		#print "common: '%s'" % common
-		print "update file list"
+		log("update file list")
 
 		# sort by status
 		self.files.sort(key=lambda x: x.status)
@@ -835,7 +837,7 @@ class Parano:
 		gtk_iteration()
 
 	def add_folder(self, folder, prefix=None):
-		print "adding folder:", folder
+		log("adding folder:", folder)
 		glade = os.path.join(DATADIR, "parano.glade")
 		self.progress_dialog = gtk.glade.XML(glade,"addfolder_progress")
 		
@@ -867,7 +869,7 @@ class Parano:
 		if prefix[-1] != "/":
 			prefix = prefix + "/"
 			
-		print "prefix: %s" % prefix
+		log("prefix: %s" % prefix)
 		visible = 0
 		if prefix:
 			visible = len(prefix)
@@ -1000,6 +1002,8 @@ class Parano:
 	def __init__(self, initial_files=[]):
 		self.init_window()		
 		self.new_hashfile()
+
+		log("datadir:", DATADIR)
 
 		if len(initial_files) == 1:
 			# load hash file
