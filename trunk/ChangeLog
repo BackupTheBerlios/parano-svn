@@ -1,3 +1,7 @@
+2006-04-24  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Fix unhandled gnomevfs exception. Some more unit testing.
+
 2006-03-31  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: Display file list ordered by status. So corrupted files

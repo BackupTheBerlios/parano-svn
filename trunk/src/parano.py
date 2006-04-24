@@ -16,46 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-"""
-gnomevfs migration notes
-gnomevfs.URI
-	append_file_name()
-	append_path()
-	append_string()
-	resolve_relative()
-	dirname is_local path toplevel
-gnomevfs.Handle(uri, gnomevfs.OPEN_READ)
-	close()
-	get_file_info()
-	read()
-	seek(offset, gnomevfs.SEEK_START)
-	tell()
-	write()
-
-gnomevfs.escape_[path_]string()
-gnomevfs.unescape_string_for_display()
-gnomevfs.format_string_for_display()
-gnomevfs.exists(uri)
-
-handling of relative path:
-paths are relative to hashfile by default.
-but may be absolute, so be careful
-
-when saving, convert all filenames to path relative to the base of the hashfile.
-maybe we want an option to save absolute paths, by is there a need ?
-
-
-"""
-
 
 NAME="Parano"
 VERSION="@version@"
 DATADIR="@datadir@"
 URL="http://parano.berlios.de"
 
-import os, sys , time, string, re
-import thread
-import md5, zlib
+import os, sys, time, string, re, thread
 import pygtk
 pygtk.require('2.0')
 import gobject, gtk, gtk.glade, gnome, gnome.ui, gnomevfs
@@ -63,6 +30,10 @@ import cStringIO, traceback
 import urllib
 import gettext
 _=gettext.gettext
+
+import md5
+import zlib
+
 
 def gtk_iteration():
 	while gtk.events_pending():
@@ -87,6 +58,10 @@ def log(*args):
 
 def debug(str):
 	print str
+
+def vfs_get_protocol(uri):
+	protocol, tmp = uri.split(":")
+	return protocol
 
 def vfs_clean_uri(uri):
 	#print "cleaning:", uri
@@ -325,8 +300,11 @@ class Parano:
 		#print "get_file_hash:", uri
 		try:
 			f = vfs_open(uri)
-		except gnomevfs.NotFoundError:
+		except gnomevfs.NotFoundError: 
 			log( _("Cannot read file: '%s'") % uri)
+			return ""
+		except gnomevfs.AccessDeniedError:
+			log( _("Cannot access file: '%s'") % uri)
 			return ""
 
 		
@@ -538,8 +516,8 @@ class Parano:
 					# matching md5
 					f.status = HASH_OK
 				else:
-					if len(f.real_hash) == 0:
-						if os.path.exists(self.current_file):
+					if not f.real_hash:
+						if gnomevfs.exists(f.filename):
 							# cannot read file
 							f.status = HASH_ERROR
 						else:

@@ -1,3 +1,7 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# (c) 2006 Gautier Portet <kassoulet gmail com>
+
 import unittest
 import parano
 parano.option_quiet = True
@@ -6,32 +10,33 @@ import glob
 import gnome
 import gnomevfs
 import gtk
+from random import randint
 
 gnome.init("Parano Test", "wip", gnome.libgnome_module_info_get()) 
-parano.DATADIR="."
+parano.DATADIR="src"
+
+base_folder = "test/"
+test_folder = base_folder + "files/"
+
 
 class ParanoTestCases(unittest.TestCase):
 
-	def setUp(self):
-		self.p = parano.Parano()
 
-	def tearDown(self):
+	def _setUp(self):
+		self.p = parano.Parano()
+		self.p.window_main.hide()
+
+	def _tearDown(self):
 		self.p = None
 
-	def never_exists(self, pathname):
-		return False
-
-	def always_exists(self, pathname):
-		return True
-
 	def _save(self, format):
-		for f in glob.glob("../test/files/*"):
+		for f in glob.glob( test_folder + "*"):
 			if os.path.isdir(f):
 				continue
 			local = os.path.abspath(f)
 			uri = gnomevfs.get_uri_from_local_path(local)
 			self.p.add_file(uri)
-		local = os.path.abspath("../test/test.%s" % format)
+		local = os.path.abspath("test/test.%s" % format)
 		uri = gnomevfs.get_uri_from_local_path(local)
 		self.p.save_hashfile(uri)
 		return uri
@@ -48,11 +53,11 @@ class ParanoTestCases(unittest.TestCase):
 			self.assert_(False, "hash mismatch with format %s" % format)
 
 	def _testCorrupt(self, format):
-		f = file("../test/files/corrupted", "w")
+		f = file(test_folder + "corrupted", "w")
 		f.write("this is the normal text")
 		f.close()
 		uri = self._save(format)
-		f = file("../test/files/corrupted", "w")
+		f = file(test_folder + "corrupted", "w")
 		f.write("this is the corrupted text")
 		f.close()
 		self._load(uri)
@@ -60,51 +65,92 @@ class ParanoTestCases(unittest.TestCase):
 		self.assert_( 
 			changed == 1 and missing == 0 and error == 0
 			, "corruption not detected with format %s" % format)
+		os.unlink(test_folder + "corrupted")
 
-	def _testSaveSFV(self):
-		self._testSave("sfv")
+	def _testMissing(self, format):
+		f = file(test_folder + "missing", "w")
+		f.write("this is the normal text")
+		f.close()
+		uri = self._save(format)
+		os.unlink(test_folder + "missing")
+		self._load(uri)
+		changed, missing, error = self.p.update_file_list()
+		self.assert_( 
+			changed == 0 and missing == 1 and error == 0
+			, "corruption not detected with format %s" % format)
 
-	def _testSaveMD5(self):
-		self._testSave("md5")
+	def _testError(self, format):
+		f = file(test_folder + "error", "w")
+		f.write("this is the normal text")
+		f.close()
+		uri = self._save(format)
+		os.chmod(test_folder + "error",0)
+		self._load(uri)
+		changed, missing, error = self.p.update_file_list()
+		os.chmod( test_folder + "error", 0666)
+		os.unlink(test_folder + "error")
+		self.assert_( 
+			changed == 0 and missing == 0 and error == 1
+			, "corruption not detected with format %s" % format)
 
-	def testCorruptSFV(self):
-		self._testCorrupt("sfv")
 
-	def testCorruptMD5(self):
-		self._testCorrupt("md5")
+	def callTest(self, test):
+		for format in ("sfv", "md5"):
+			self._setUp()
+			test(format)
+			self._tearDown()
 
+	def testSave(self):
+		self.callTest(self._testSave)
 
-"""
-	def testSuffix(self):
-		self.g.set_target_suffix(".ogg")
-		self.failUnlessEqual(self.g.get_target_name(self.s),
-							 "file:///path/to/file.ogg")
-	gnome.init(NAME, VERSION, gnome.libgnome_module_info_get()) 
+	def testCorrupt(self):
+		self.callTest(self._testCorrupt)
 
-	def testBasename(self):
-		self.g.set_target_suffix(".ogg")
-		self.g.set_basename_pattern("%(track-number)02d-%(title)s")
-		self.failUnlessEqual(self.g.get_target_name(self.s),
-							 "file:///path/to/01-Hi_Ho.ogg")
+	def testMissing(self):
+		self.callTest(self._testMissing)
 
-	def testLocation(self):
-		self.g.set_target_suffix(".ogg")
-		self.g.set_folder("/music")
-		self.g.set_subfolder_pattern("%(artist)s/%(album)s")
-		self.g.set_basename_pattern("%(track-number)02d-%(title)s")
-		self.failUnlessEqual(self.g.get_target_name(self.s),
-							 "file:///music/Foo_Bar/IS__TOO/01-Hi_Ho.ogg")
+	def testError(self):
+		self.callTest(self._testError)
 
-	def testTargetExists(self):
-		self.g.set_exists(self.always_exists)
-		self.g.set_target_suffix(".ogg")
-		self.g.set_folder("/")
-		self.failUnlessRaises(TargetNameCreationFailure,
-							  self.g.get_target_name,
-							  self.s)
-"""
+	def testRelative(self):
+		self._setUp()
+		for f in glob.glob( test_folder + "*"):
+			if os.path.isdir(f):
+				continue
+			local = os.path.abspath(f)
+			uri = gnomevfs.get_uri_from_local_path(local)
+			self.p.add_file(uri)
+		local = os.path.abspath("test/relative/test.sfv")
+		uri = gnomevfs.get_uri_from_local_path(local)
+		self.p.save_hashfile(uri)
+		self._tearDown()
+
+try:
+	os.makedirs(test_folder)
+except OSError:
+	pass
+
+try:
+	os.makedirs(base_folder+"relative")
+except OSError:
+	pass
+
+def random_file(filename):
+	f = file(test_folder + filename, "wb")
+	buffer = []
+	for i in xrange(randint(1024, 100*1024)):
+		buffer.append(chr(randint(0,255)))
+	f.write(str(buffer))
+
+def create_test_files():
+	random_file("""#é~çà@ '"&{^""")
+	random_file("test yop yop")
 
 if __name__ == "__main__":
-	unittest.main()
 
+	if os.path.exists(test_folder):
+		create_test_files()
+		unittest.main()
+	else:
+		print "cannot find", test_folder 
 
