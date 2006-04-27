@@ -1,3 +1,13 @@
+2006-04-27  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Fixed sooo many minor bugs...
+	  Added SHA-1 hashing.
+
+2006-04-26  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Files in hashfile are now added with a path relative to
+	  the hashfile. Code cleaning.
+
 2006-04-24  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: Fix unhandled gnomevfs exception. Some more unit testing.

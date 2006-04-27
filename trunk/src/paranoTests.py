@@ -95,7 +95,7 @@ class ParanoTestCases(unittest.TestCase):
 
 
 	def callTest(self, test):
-		for format in ("sfv", "md5"):
+		for format in ("sfv", "md5", "sha1"):
 			self._setUp()
 			test(format)
 			self._tearDown()
@@ -125,6 +125,23 @@ class ParanoTestCases(unittest.TestCase):
 		self.p.save_hashfile(uri)
 		self._tearDown()
 
+	def testGetRelative(self):
+		self._setUp()
+
+		tests = (
+			("file:/yop/test","file:/yop/plop","../test"),
+			("file:/yop/test/foo.doc","file:/yop/plop","../test/foo.doc"),
+			("file:/yop/test/foo.doc","file:/yop/test","foo.doc"),
+			("file:/yop/test/foo.doc","file:/yop/test/","foo.doc"),
+			("file:/yop/test","ftp:/yop/plop/foo.md5", None),
+		)
+
+		for uri, ref, expected in tests:
+			result = self.p.get_relative_filename(uri, ref)
+			self.assert_(result == expected, "'%s' != %s" % (result, expected))
+
+		self._tearDown()
+
 try:
 	os.makedirs(test_folder)
 except OSError:
@@ -145,6 +162,7 @@ def random_file(filename):
 def create_test_files():
 	random_file("""#é~çà@ '"&{^""")
 	random_file("test yop yop")
+
 
 if __name__ == "__main__":
 
