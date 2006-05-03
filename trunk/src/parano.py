@@ -574,8 +574,7 @@ class Parano:
 
 		start=time.time()
 		total = self.progress_total_bytes
-		#thread.start_new_thread(self.thread_update_hash, ())
-		self.thread_update_hash()
+		thread.start_new_thread(self.thread_update_hash, ())
 		
 		while self.progress_total_bytes>0:
 			if self.abort:
