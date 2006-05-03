@@ -9,5 +9,12 @@
     <comment>MD5 Hash File</comment>
     <glob pattern="*.md5"/>
     <glob pattern="*.MD5"/>
+    <glob pattern="*.md5sum"/>
+  </mime-type>
+  <mime-type type="application/x-sha1">
+    <comment>SHA-1 Hash File</comment>
+    <glob pattern="*.sha1"/>
+    <glob pattern="*.SHA1"/>
+    <glob pattern="*.sha1sum"/>
   </mime-type>
 </mime-info>

@@ -1,3 +1,10 @@
+2006-05-03  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Removed the -tt from #!.
+	  Display the size of hashed file in statusbar.
+	  Fixed lock when hashed file is missing.
+	  And others bugs found by Renzo.
+
 2006-04-27  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: Fixed sooo many minor bugs...

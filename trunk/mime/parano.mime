@@ -1,5 +1,8 @@
 application/x-md5
-	ext: md5 MD5
+	ext: md5 md5sum MD5
 
 application/x-sfv
 	ext: sfv SFV
+
+application/x-sha1
+	ext: sha1 sha1sum SHA1

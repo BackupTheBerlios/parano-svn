@@ -4,4 +4,4 @@ parano
 	can_open_multiple_files=true
 	expects_uris=false
 	requires_terminal=false
-	mime_types=application/x-sfv;application/x-md5;
+	mime_types=application/x-sfv;application/x-md5;application/x-sha1;

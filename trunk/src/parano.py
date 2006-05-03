@@ -1,4 +1,4 @@
-#!/usr/bin/env python -tt
+#!/usr/bin/env python
 
 # Parano - GNOME HashFile Frontend
 # Copyright (C) 2005-2006 Gautier Portet < kassoulet users.berlios.de >
@@ -52,16 +52,12 @@ option_quiet = False
 def log(*args):
 	"""print a message"""
 	if not option_quiet:
-		ss = " ".join([str(a) for a in args])
-		print ss
+		print " ".join([str(a) for a in args])
 		
-		f = file("parano.log","a")
-		f.write(ss+"\n")
-		f.close()
-
-def debug(message):
+def debug(*args):
 	"""print a debug message"""
-	print message
+	#print " ".join([str(a) for a in args])
+	pass
 
 def vfs_get_protocol(uri):
 	"""return the protocol used in the uri"""
@@ -83,32 +79,22 @@ def vfs_clean_uri(uri):
 
 def vfs_open(uri, mode="r"):
 	"""return a file() compatible object from an uri"""
-	try:
-		uri = vfs_clean_uri(uri)
-		uri = gnomevfs.URI(uri)
-		f = gnomevfs.Handle(uri)
-		return f
-	except:
-		log("Cannot load '%s'" % str(uri))
-		return None
+	uri = vfs_clean_uri(uri)
+	uri = gnomevfs.URI(uri)
+	f = gnomevfs.Handle(uri)
+	return f
 
 def vfs_walk(uri):
 	"""in the style of os.path.walk, but using gnomevfs.
 	
 	uri -- the base folder uri.
 	return a list of uri.
-	
 	"""
-
 	if not isinstance(uri, gnomevfs.URI):
 		uri = gnomevfs.URI(uri)
-
 	if str(uri)[-1] != '/':
 		uri = uri.append_string("/")
-
-	#info = gnomevfs.get_file_info(uri, gnomevfs.FILE_INFO_GET_MIME_TYPE)
 	filelist = []	
-
 	try:
 		dirlist = gnomevfs.open_directory(uri)
 	except:
@@ -184,7 +170,8 @@ class File:
 		if displayed_name:
 			self.displayed_name=displayed_name
 		else:
-			self.displayed_name=filename
+			self.displayed_name=os.path.split(filename)[1]
+		self.displayed_name = gnomevfs.unescape_string_for_display(self.displayed_name)	
 		self.filename=filename
 		# the Hash loaded from file
 		self.expected_hash=expected_hash
@@ -317,7 +304,6 @@ class Parano:
 		except gnomevfs.AccessDeniedError:
 			log( _("Cannot access file: '%s'") % uri)
 			return ""
-
 		
 		hasher = self.format.hasher
 		hasher.init()
@@ -352,32 +338,20 @@ class Parano:
 
 	def get_hashfile_format(self, uri, content):
 	
-		try:
-			pass
-		except:
-			pass
-		if True:
-			
-			for format in formats:
-				# search in al our recognized formats
-				regex = format.filename_regex
-				result = regex.search(uri.lower())
-				if result:
-					# this can be a valid filename, now look inside
-					if format.detect_file(content):
-						# yes, this is a valid hashfile \o/
-						return format
-		try:
-			pass
-		except gnomevfs.InvalidURIError:
-			pass
-			
+		for format in formats:
+			# search in al our recognized formats
+			regex = format.filename_regex
+			result = regex.search(uri.lower())
+			if result:
+				# this can be a valid filename, now look inside
+				if format.detect_file(content):
+					# yes, this is a valid hashfile \o/
+					return format
 		return None
 
 	def load_hashfile(self, uri):
 		# load hashfile
 		uri = vfs_clean_uri(uri)
-		
 		content = gnomevfs.read_entire_file(uri)
 		lines = content.split("\n")
 		
@@ -460,6 +434,8 @@ class Parano:
 			dest = self.get_relative_filename(ff.filename, base)
 			if not dest:
 				self.set_status(_("Cannot save hashfile"))
+				log("Cannot save hashfile '%s'" % ff.filename)
+				return
 			file = gnomevfs.unescape_string_for_display(dest)
 			hash = ff.real_hash
 			list.append( (hash,file) )
@@ -475,7 +451,7 @@ class Parano:
 		self.update_title()
 		self.set_status(_("Hashfile Saved"))
 
-	def add_file(self, filename, displayed_name="", hash=""):
+	def add_file(self, filename, displayed_name=None, hash=None):
 	
 		info = gnomevfs.get_file_info(filename, gnomevfs.FILE_INFO_FIELDS_SIZE)
 
@@ -484,7 +460,7 @@ class Parano:
 		elif info.type == gnomevfs.FILE_TYPE_DIRECTORY:
 			self.add_folder(filename)
 		else:
-			log("error when tring to add: '%s'" % filename)
+			log("error when trying to add: '%s'" % filename)
 
 	def set_status(self, text, icon=STATE_READY):
 		self.status_text = text
@@ -534,7 +510,7 @@ class Parano:
 			f.real_hash = self.get_file_hash(f.filename)
 			self.progress_file=self.progress_file+1
 			
-			if len(f.expected_hash) == 0:
+			if not f.expected_hash:
 				# new file in md5
 				f.status = HASH_OK
 			else:	
@@ -598,7 +574,8 @@ class Parano:
 
 		start=time.time()
 		total = self.progress_total_bytes
-		thread.start_new_thread(self.thread_update_hash, ())
+		#thread.start_new_thread(self.thread_update_hash, ())
+		self.thread_update_hash()
 		
 		while self.progress_total_bytes>0:
 			if self.abort:
@@ -634,6 +611,7 @@ class Parano:
 			self.set_status(_("Hashing canceled!"))
 		else:
 			self.update_and_check_file_list()
+			self.set_status(_("%d files verified and ok. (%.2f MiB)") % (len(self.files), total/1024.0/1024.0), STATE_CORRECT)
 			log( "hashed %d file(s) at %.2f MiB/s" % (len(self.files),total/(time.time()-start)/(1024*1024)))
 
 		self.window_main.set_sensitive(True)
@@ -645,7 +623,7 @@ class Parano:
 		changed, missing, error = 0,0,0
 
 		common = os.path.commonprefix([f.displayed_name for f in self.files])		
-		log("update file list")
+		debug("update file list")
 
 		# sort by status
 		self.files.sort(key=lambda x: x.status)
@@ -668,11 +646,8 @@ class Parano:
 		if changed or missing or error:
 			self.set_status(_("Warning: %d files are different!") % (changed+missing+error),STATE_CORRUPTED)
 		else:
-			if self.files:
-				self.set_status(_("%d files verified and ok.") % len(self.files), STATE_CORRECT)
-			else:	
+			if not self.files:
 				self.set_status(_("Ready."))
-		
 
 	def on_quit_activate(self, widget):
 		if not self.on_delete_event(widget):
@@ -919,7 +894,6 @@ class Parano:
 
 	def init_window(self):
 		# main window
-		
 		glade = os.path.join(DATADIR, "parano.glade")
 		self.window = window = gtk.glade.XML(glade,"window_main")
 		window.signal_autoconnect(self)
@@ -968,36 +942,36 @@ class Parano:
 		drag_context.drop_finish(True, timestamp)
 		
 		for f in files:
-		
-			f = urllib.unquote(f)
-			# remove "file://"	
-			result = re.search(r"file:(//)?(.*)", f)
-			if result:
-				f = result.group(2)
-				
 			# remove trailing noise
 			f = f.strip("\r\n\x00",)
-						
-			if self.get_hashfile_format(f):
-					glade = os.path.join(DATADIR, "parano.glade")
-					dialog = gtk.glade.XML(glade,"dialog_add_or_open")
-					dialog = dialog.get_widget("dialog_add_or_open")
+
+			uri = vfs_clean_uri(f)
+			lines = None
+			try:
+				content = gnomevfs.read_entire_file(uri)
+			except gnomevfs.IsDirectoryError:
+				pass
+			except gnomevfs.NotFoundError:
+				pass
+			else:
+				lines = content.split("\n")
+				if lines and self.get_hashfile_format(uri, lines):
+						glade = os.path.join(DATADIR, "parano.glade")
+						dialog = gtk.glade.XML(glade,"dialog_add_or_open")
+						dialog = dialog.get_widget("dialog_add_or_open")
+				
+						result = dialog.run()
+						dialog.hide_all()
+						if result == gtk.RESPONSE_CANCEL:
+							# abort drop
+							return
+						if result == gtk.RESPONSE_CLOSE:
+							# open new hashfile
+							self.load_hashfile(f)
+							return
 			
-					result = dialog.run()
-					dialog.hide_all()
-					if result == gtk.RESPONSE_CANCEL:
-						# abort drop
-						return
-					if result == gtk.RESPONSE_CLOSE:
-						# open new hashfile
-						self.load_hashfile(f)
-						return
-			
-			# add the file
-			if os.path.exists(f):
-				self.add_file(f)
-			elif f: # TODO: error
-				log( _("skipping dropped uri: %s") % repr(f))
+			# add the file or folder
+			self.add_file(f)
 		
 		self.modified=True
 		self.update_ui()
@@ -1006,7 +980,7 @@ class Parano:
 		self.init_window()		
 		self.new_hashfile()
 
-		log("datadir:", DATADIR)
+		debug("datadir:", DATADIR)
 
 		if len(initial_files) == 1:
 			# load hash file
@@ -1064,7 +1038,7 @@ if __name__ == "__main__":
 	if argdict["quiet"]: option_quiet = True
 		
 	log(NAME +" "+ VERSION)
-	log("datadir: "+DATADIR)
+	debug("datadir: "+DATADIR)
 
 	parano = Parano(leftover)
 	parano.main()
