@@ -1,0 +1,76 @@
+2006-05-05  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Fixed problem with dropped files, detection of hashfile
+	  doesn't all file content anymore...
+
+2006-05-03  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Removed the -tt from #!.
+	  Display the size of hashed file in statusbar.
+	  Fixed lock when hashed file is missing.
+	  And others bugs found by Renzo.
+
+2006-04-27  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Fixed sooo many minor bugs...
+	  Added SHA-1 hashing.
+
+2006-04-26  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Files in hashfile are now added with a path relative to
+	  the hashfile. Code cleaning.
+
+2006-04-24  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Fix unhandled gnomevfs exception. Some more unit testing.
+
+2006-03-31  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Display file list ordered by status. So corrupted files
+	  appear first, then missing ones, etc...
+
+2006-03-27  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: fix some gnomevfs problems.
+
+2006-03-23  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: fix display of files when added with folders.
+
+2006-03-22  Gautier Portet <kassoulet gmail com>
+
+	* more gnomevfs magic added.
+	* fix loading of .md5 with the line between \ chars.
+	* Allow selecting multiples folders in 'add folder' dialog.
+	* Allow selection non-local files in 'add' dialogs
+
+2006-03-09  Gautier Portet <kassoulet gmail com>
+
+	* Started using gnomevfs.
+
+2006-03-05  Gautier Portet <kassoulet gmail com>
+
+	* Trashed progressbar, we use a better statusbar now.
+
+2006-03-01  Gautier Portet <kassoulet gmail com>
+
+	* Current filename display in progress dialog are now correctly escaped. 
+
+2006-02-28  Gautier Portet <kassoulet gmail com>
+
+	* Some minor UI changes.
+
+2006-02-11  Gautier Portet <kassoulet gmail com>
+
+	* Added a message when an integrity corruption is detected when
+	loading a hash file.
+
+2005-11-26  Gautier Portet <kassoulet gmail com>
+
+	* Missing files are now marked as errors.
+	* Added a message in statusbar when loading a hash.
+
+
+2005-02-24	added a dialog asking the user if he wants to
+save/cancel/dont_save when we clear/load/close the hashfile
+	
