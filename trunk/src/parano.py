@@ -224,7 +224,10 @@ class HasherCRC32:
 class FormatBase:
 	def detect_file(self, f):
 		
+		bad_lines = 0
 		for line in f:
+			if len(line) > 2000:
+				return False
 			line = line.strip()
 			result = self.regex_reader.search(line)
 			if result:
@@ -234,6 +237,10 @@ class FormatBase:
 				if hash and file:
 					# a line with valid content
 					return True
+			else:
+				bad_lines += 1
+				if bad_lines > 5:
+					return False
 		return False
 		
 	def read_file(self, f):
@@ -261,7 +268,7 @@ class FormatMD5 (FormatBase):
 	def __init__(self):
 		self.name = "MD5"
 		self.filename_pattern = "*.md5*"
-		self.filename_regex = re.compile(r".*\.md5(sum)?")
+		self.filename_regex = re.compile(r".*\.md5(sum)?$")
 		self.hasher = HasherMD5()
 
 		self.regex_reader = re.compile(r";.*|#.*|\\?^(?P<hash>[\dA-Fa-f]{32}) [\* ]?(?P<file>.*$)\\?|^\s*$")
@@ -272,7 +279,7 @@ class FormatSHA1 (FormatBase):
 	def __init__(self):
 		self.name = "SHA-1"
 		self.filename_pattern = "*.sha1*"
-		self.filename_regex = re.compile(r".*\.sha1(sum)?")
+		self.filename_regex = re.compile(r".*\.sha1(sum)?$")
 		self.hasher = HasherSHA1()
 
 		self.regex_reader = re.compile(r";.*|#.*|\\?^(?P<hash>[\dA-Fa-f]{40}) [\* ]?(?P<file>.*$)\\?|^\s*$")
@@ -283,7 +290,7 @@ class FormatSFV (FormatBase):
 	def __init__(self):
 		self.name = "SFV"
 		self.filename_pattern = "*.sfv"
-		self.filename_regex = re.compile(r".*\.sfv")
+		self.filename_regex = re.compile(r".*\.sfv$")
 		self.hasher = HasherCRC32()
 
 		self.regex_reader = re.compile(r";.*|(?P<file>.*) (?P<hash>[\dA-Fa-f]{8}$)|^\s*$")
@@ -336,7 +343,7 @@ class Parano:
 		self.update_title()
 		self.set_status(_("Ready"))
 
-	def get_hashfile_format(self, uri, content):
+	def get_hashfile_format(self, uri):
 	
 		for format in formats:
 			# search in al our recognized formats
@@ -344,6 +351,9 @@ class Parano:
 			result = regex.search(uri.lower())
 			if result:
 				# this can be a valid filename, now look inside
+				uri = vfs_clean_uri(uri)
+				content = gnomevfs.read_entire_file(uri)
+				content = content.split("\n")
 				if format.detect_file(content):
 					# yes, this is a valid hashfile \o/
 					return format
@@ -351,18 +361,18 @@ class Parano:
 
 	def load_hashfile(self, uri):
 		# load hashfile
-		uri = vfs_clean_uri(uri)
-		content = gnomevfs.read_entire_file(uri)
-		lines = content.split("\n")
-		
 		files_to_add=[]
-		self.format=self.get_hashfile_format(uri, lines)
+		self.format=self.get_hashfile_format(uri)
 				
 		if not self.format:
 			log("unknown format")
 			return
 		log("Detected format: " + self.format.name)
-				
+		
+		# load content
+		uri = vfs_clean_uri(uri)
+		content = gnomevfs.read_entire_file(uri)
+		lines = content.split("\n")
 		list = self.format.read_file(lines)
 
 		root = os.path.dirname(uri)
@@ -373,7 +383,7 @@ class Parano:
 			files_to_add.append( (u, file, hash) )
 		
 		# reset hashfile
-		self.new_hashfile()
+		#self.new_hashfile()
 		
 		# do add the files to list
 		for f in files_to_add:
@@ -712,6 +722,8 @@ class Parano:
 		if not self.discard_hashfile():
 			return
 
+		self.new_hashfile()
+
 		glade = os.path.join(DATADIR, "parano.glade")
 		self.loadhashfile_dialog = gtk.glade.XML(glade,"filechooserdialog_loadhashfile")
 		dialog = self.loadhashfile_dialog.get_widget("filechooserdialog_loadhashfile")
@@ -728,7 +740,8 @@ class Parano:
 		gtk_iteration()
 		
 		if result == gtk.RESPONSE_OK:
-			self.load_hashfile(dialog.get_uri())
+			for uri in dialog.get_uris():
+				self.load_hashfile(uri)
 	
 		self.update_file_list()
 
@@ -942,33 +955,25 @@ class Parano:
 		
 		for f in files:
 			# remove trailing noise
-			f = f.strip("\r\n\x00",)
+			uri = f.strip("\r\n\x00",)
 
-			uri = vfs_clean_uri(f)
-			lines = None
-			try:
-				content = gnomevfs.read_entire_file(uri)
-			except gnomevfs.IsDirectoryError:
-				pass
-			except gnomevfs.NotFoundError:
-				pass
-			else:
-				lines = content.split("\n")
-				if lines and self.get_hashfile_format(uri, lines):
-						glade = os.path.join(DATADIR, "parano.glade")
-						dialog = gtk.glade.XML(glade,"dialog_add_or_open")
-						dialog = dialog.get_widget("dialog_add_or_open")
-				
-						result = dialog.run()
-						dialog.hide_all()
-						if result == gtk.RESPONSE_CANCEL:
-							# abort drop
-							return
-						if result == gtk.RESPONSE_CLOSE:
-							# open new hashfile
-							self.load_hashfile(f)
-							return
+			if self.get_hashfile_format(uri):
+					glade = os.path.join(DATADIR, "parano.glade")
+					dialog = gtk.glade.XML(glade,"dialog_add_or_open")
+					dialog = dialog.get_widget("dialog_add_or_open")
 			
+					result = dialog.run()
+					dialog.hide_all()
+					if result == gtk.RESPONSE_CANCEL:
+						# abort drop
+						continue
+					if result == gtk.RESPONSE_CLOSE:
+						# open new hashfile
+						self.load_hashfile(f)
+						continue
+			else:
+				log("rejecting, no hashfile detected: '%s'" % uri)
+
 			# add the file or folder
 			self.add_file(f)
 		
@@ -985,14 +990,15 @@ class Parano:
 			# load hash file
 			log("One file specified, trying to load as HashFile.")
 			filename = initial_files[0]
-			#if self.get_hashfile_format(filename):
-			#	log("HashFile detected, loading.")
-			self.load_hashfile(filename)
+			if self.get_hashfile_format(filename):
+				log("HashFile detected, loading: '%s'" % filename)
+				self.load_hashfile(filename)
 			initial_files=[]
 		
 		for f in initial_files:
-			log("Adding file: "+f)
-			self.add_file(f)
+			log("Adding hashfile: %s" % f)
+			#self.add_file(f)
+			self.load_hashfile(f)
 			
 		self.update_title()
 		self.modified=False

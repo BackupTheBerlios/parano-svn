@@ -1,6 +1,10 @@
 todo
 ====
 
+* make possible to launch parano with multiples hashfiles to check, merge the list.
+  at saving, obviously we save to just one file...
+  and the same with dropping files list
+
 * translation
 ? installation
 * nautilus scripts:
