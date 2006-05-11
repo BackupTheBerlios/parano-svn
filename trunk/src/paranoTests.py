@@ -142,6 +142,31 @@ class ParanoTestCases(unittest.TestCase):
 
 		self._tearDown()
 
+	def testMultiple(self):
+		self._setUp()
+		count=0
+		for f in glob.glob( test_folder + "*"):
+			if os.path.isdir(f):
+				continue
+			local = os.path.abspath(f)
+			uri = gnomevfs.get_uri_from_local_path(local)
+			self.p.new_hashfile()
+			self.p.add_file(uri)
+			local = os.path.abspath("test/hash-%d.sfv" % count)
+			uri = gnomevfs.get_uri_from_local_path(local)
+			self.p.save_hashfile(uri)
+			count += 1
+
+		self.p.new_hashfile()
+		for i in range(count):
+			local = os.path.abspath("test/hash-%d.sfv" % i)
+			uri = gnomevfs.get_uri_from_local_path(local)
+			self.p.load_hashfile(uri)
+
+		self.assert_(len(self.p.files) == count, "%d hashfiles loaded, expected %d" % (len(self.p.files), count))
+
+		self._tearDown()
+
 try:
 	os.makedirs(test_folder)
 except OSError:
@@ -162,6 +187,8 @@ def random_file(filename):
 def create_test_files():
 	random_file("""#é~çà@ '"&{^""")
 	random_file("test yop yop")
+	random_file("test file")
+	random_file("pouët")
 
 
 if __name__ == "__main__":

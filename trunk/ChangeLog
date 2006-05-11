@@ -1,3 +1,9 @@
+2006-05-11  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Removed dialog "load or add to hashfile" when adding dropping hashfiles.
+	  now you can drop, select with open dialog, or pass as program arguments
+	  multiples hashfiles, that will be checked at startup. Nice uh ?
+
 2006-05-05  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: Fixed problem with dropped files, detection of hashfile

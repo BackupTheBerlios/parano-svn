@@ -605,7 +605,6 @@ class Parano:
 					seconds = remaining%60
 					if minutes >= 1:
 						text = _("About %d:%02d minute(s) remaining") % (minutes, seconds)
-						#text = _("About %d minute(s) remaining") % minutes
 					else:
 						text = _("Less than one minute remaining")
 					self.progressbar.set_text(text)
@@ -639,7 +638,6 @@ class Parano:
 
 		for f in self.files:
 			iter = self.liststore.append()
-			#self.liststore.set(iter, COLUMN_FILE, f.displayed_name[len(common):])
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 			if f.status == HASH_DIFFERENT:
@@ -958,21 +956,9 @@ class Parano:
 			uri = f.strip("\r\n\x00",)
 
 			if self.get_hashfile_format(uri):
-					glade = os.path.join(DATADIR, "parano.glade")
-					dialog = gtk.glade.XML(glade,"dialog_add_or_open")
-					dialog = dialog.get_widget("dialog_add_or_open")
-			
-					result = dialog.run()
-					dialog.hide_all()
-					if result == gtk.RESPONSE_CANCEL:
-						# abort drop
-						continue
-					if result == gtk.RESPONSE_CLOSE:
-						# open new hashfile
-						self.load_hashfile(f)
-						continue
-			else:
-				log("rejecting, no hashfile detected: '%s'" % uri)
+				log("loading as hashfile: '%s'" % uri)
+				self.load_hashfile(f)
+				continue
 
 			# add the file or folder
 			self.add_file(f)
@@ -996,8 +982,7 @@ class Parano:
 			initial_files=[]
 		
 		for f in initial_files:
-			log("Adding hashfile: %s" % f)
-			#self.add_file(f)
+			log("loading hashfile: %s" % f)
 			self.load_hashfile(f)
 			
 		self.update_title()
