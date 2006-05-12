@@ -1,0 +1,290 @@
+# translation of Parano.
+# Copyright (C) 2004 Gautier Portet	
+# This file is distributed under the same license as the Parano package.
+# 
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: Parano 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-05-12 19:40+0200\n"
+"PO-Revision-Date: 2006-05-12 20:00+0200\n"
+"Last-Translator:  <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: "
+
+#: ../src/parano.py:101
+#, python-format
+msgid "skipping: '%s'"
+msgstr "passe: '%s'"
+
+#: ../src/parano.py:189
+#, python-format
+msgid "Warning: cannot get size of file '%s'"
+msgstr ""
+
+#: ../src/parano.py:309
+#, python-format
+msgid "Cannot read file: '%s'"
+msgstr ""
+
+#: ../src/parano.py:312
+#, python-format
+msgid "Cannot access file: '%s'"
+msgstr ""
+
+#: ../src/parano.py:344
+msgid "Ready"
+msgstr "Prêt"
+
+#: ../src/parano.py:446
+msgid "Cannot save hashfile"
+msgstr "Impossible de sauver le fichier"
+
+#: ../src/parano.py:462
+msgid "Hashfile Saved"
+msgstr "Fichier sauvé"
+
+#: ../src/parano.py:494
+msgid "Untitled Hashfile (Unsaved)"
+msgstr "Fichier Sans Nom (Modifié)"
+
+#: ../src/parano.py:496
+msgid "Untitled Hashfile"
+msgstr "Fichier Sans Nom"
+
+#: ../src/parano.py:507
+#, python-format
+msgid "<i>%s (Paused)</i>"
+msgstr "<i>%s (Pausé)</i>"
+
+#: ../src/parano.py:508
+msgid "Paused"
+msgstr "Pausé"
+
+#: ../src/parano.py:552
+msgid "Hashing..."
+msgstr "Calcul en cours..."
+
+#: ../src/parano.py:591
+msgid "Canceling..."
+msgstr "Annulation..."
+
+#: ../src/parano.py:595
+#, python-format
+msgid "Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>"
+msgstr "Hash du fichier <b>%d</b> sur <b>%d</b>: <i>%s</i>"
+
+#: ../src/parano.py:607
+#, python-format
+msgid "About %d:%02d minute(s) remaining"
+msgstr "Env. %d:%02d minute(s) restant(es)"
+
+#: ../src/parano.py:609
+msgid "Less than one minute remaining"
+msgstr "Moins d'une minute restante"
+
+#: ../src/parano.py:618 ../src/parano.py:619
+msgid "Hashing canceled!"
+msgstr "Calcul  annulé!"
+
+#: ../src/parano.py:622
+#, python-format
+msgid "%d files verified and ok. (%.2f MiB)"
+msgstr "%d fichiers verifiés et corrects. (%.2f Mo)"
+
+#: ../src/parano.py:654
+#, python-format
+msgid "Warning: %d files are different!"
+msgstr "Attention: %d fichier(s) different(s) !"
+
+#: ../src/parano.py:657 ../src/parano.py:882
+msgid "Ready."
+msgstr "Prêt."
+
+#: ../src/parano.py:822
+msgid "Reading list of files..."
+msgstr "Lecture de la liste des fichiers"
+
+#: ../src/parano.py:859
+msgid "Listing files...."
+msgstr "Liste des fichiers..."
+
+#: ../src/parano.py:880
+msgid "Add Folder canceled."
+msgstr "Ajout de répertoire annulé."
+
+#: ../src/parano.py:1000
+#, python-format
+msgid ""
+"<big><b>A programming error has been detected during the execution of %s %s."
+"</b></big>\n"
+"\n"
+"<tt><small>%s</small></tt>"
+msgstr ""
+
+#: ../src/parano.py:1004
+msgid "Bug Detected"
+msgstr ""
+
+#: ../src/parano.glade.h:1
+#, fuzzy
+msgid ""
+"<big><b>Do you want to save changes ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+"<big><b>Sauver les changements avant de quitter?</b></big>\n"
+"\n"
+"Si vous ne sauvez pas, les changements seront perdus."
+
+#: ../src/parano.glade.h:4
+msgid ""
+"<big><b>Overwrite file ?</b></big>\n"
+"\n"
+"The file already exists, do you want to replace it with the new one you are "
+"saving ?"
+msgstr ""
+"<big><b>Ecrasement du fichier ?</b></big>\n"
+"\n"
+"Le fichier existe déjà, voulez-vous le remplacer par celui que vous êtes en train de sauver ?"
+
+#: ../src/parano.glade.h:7
+msgid ""
+"<big><b>Save changes before closing ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+"<big><b>Sauver les changements avant de quitter?</b></big>\n"
+"\n"
+"Si vous ne sauvez pas, les changements seront perdus."
+
+#: ../src/parano.glade.h:10
+msgid "<i>You can use .md5, .sha1 or .sfv.</i>"
+msgstr "<i>Vous pouvez utiliser .md5, .sha1 or .sfv.</i>"
+
+#: ../src/parano.glade.h:11
+msgid "Add File(s)"
+msgstr "Ajouter Fichier(s)"
+
+#: ../src/parano.glade.h:12
+msgid "Add File..."
+msgstr "Ajouter Fichier..."
+
+#: ../src/parano.glade.h:13
+msgid "Add Folde_r"
+msgstr "Ajouter _répertoire"
+
+#: ../src/parano.glade.h:14
+msgid "Add Folder"
+msgstr "Ajouter répertoire"
+
+#: ../src/parano.glade.h:15
+msgid "Add Folder..."
+msgstr "Ajouter Répertoire..."
+
+#: ../src/parano.glade.h:16
+msgid "Add all files and folders from selected folder to current MD5 file"
+msgstr ""
+
+#: ../src/parano.glade.h:17
+msgid "Add all files and folders from selected folder to current hashfile"
+msgstr "Ajouter tout le contenu du répertoire dans la liste courante."
+
+#: ../src/parano.glade.h:18
+msgid "Add some files to current MD5 file"
+msgstr ""
+
+#: ../src/parano.glade.h:19
+msgid "Add some files to current hashfile"
+msgstr "AJouter des fichiers dans la liste courante."
+
+#: ../src/parano.glade.h:20
+msgid ""
+"Do you want to add this file to the current hashfile or open and check it as "
+"a new hashfile?"
+msgstr ""
+
+#: ../src/parano.glade.h:21
+msgid "Don't save"
+msgstr "Ne pas sauver"
+
+#: ../src/parano.glade.h:22
+msgid "GNOME HashFile Manager "
+msgstr "un gestonnaire de fichier de hachage pour GNOME"
+
+#: ../src/parano.glade.h:23
+msgid "Load Hash File"
+msgstr "Charge Fichier"
+
+#: ../src/parano.glade.h:24
+msgid "New File"
+msgstr "Nouveau Fichier"
+
+#: ../src/parano.glade.h:25
+msgid "Open File"
+msgstr "Ouvrir Fichier"
+
+#: ../src/parano.glade.h:26
+msgid "Parano"
+msgstr ""
+
+#: ../src/parano.glade.h:27
+msgid "Remove"
+msgstr "Supprimer"
+
+#: ../src/parano.glade.h:28
+msgid "Replace"
+msgstr "Remplacer"
+
+#: ../src/parano.glade.h:29
+msgid "Save File"
+msgstr "Sauver Fichier"
+
+#: ../src/parano.glade.h:30
+msgid "Save Hash File"
+msgstr "Sauver Fichier"
+
+#: ../src/parano.glade.h:31
+#, fuzzy
+msgid "_Add File"
+msgstr "Ajouter Fichier"
+
+#: ../src/parano.glade.h:32
+msgid "_New"
+msgstr "Nouveau"
+
+#: ../src/parano.glade.h:33
+msgid "_Pause"
+msgstr "Pause"
+
+#: ../src/parano.glade.h:34
+msgid "translator_credits"
+msgstr ""
+
+#~ msgid ""
+#~ "Cannot read %s\n"
+#~ "It's maybe not a MD5 sum file"
+#~ msgstr ""
+#~ "Cannot read %s\n"
+#~ "It's maybe not a MD5 sum file"
+
+#~ msgid "%s (Unsaved)"
+#~ msgstr "%s (Unsaved)"
+
+#~ msgid "<b>%d / %d</b>"
+#~ msgstr "<b>%d / %d</b>"
+
+#~ msgid "Calculate hash automatically"
+#~ msgstr "Calculer les sommes de contrôles automatiquement"
+
+#~ msgid "<b>Files hashed:</b>"
+#~ msgstr "<b>Fichiers calculés:</b>"
+
+#~ msgid "<big><b>Adding Folder</b></big>"
+#~ msgstr "<big><b>Adding Folder</b></big>"
+
+#~ msgid "Refresh"
+#~ msgstr "Rafraïchîr"
