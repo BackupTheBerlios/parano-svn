@@ -295,8 +295,8 @@
 	      <child>
 		<widget class="GtkToolButton" id="toolbutton_addfile">
 		  <property name="visible">True</property>
-		  <property name="tooltip" translatable="yes">Add some files to current MD5 file</property>
-		  <property name="label" translatable="yes">Add _File</property>
+		  <property name="tooltip" translatable="yes">Add some files to current hashfile</property>
+		  <property name="label" translatable="yes">_Add File</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-file</property>
 		  <property name="visible_horizontal">True</property>
@@ -313,7 +313,7 @@
 	      <child>
 		<widget class="GtkToolButton" id="toolbutton_addfolder">
 		  <property name="visible">True</property>
-		  <property name="tooltip" translatable="yes">Add all files and folders from selected folder to current MD5 file</property>
+		  <property name="tooltip" translatable="yes">Add all files and folders from selected folder to current hashfile</property>
 		  <property name="label" translatable="yes">Add Folde_r</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-directory</property>

@@ -2,7 +2,7 @@ dnl -*- Mode: autoconf -*-
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.53)
 AC_INIT(src/parano.py)
-AM_INIT_AUTOMAKE(parano, "0.3.2")
+AM_INIT_AUTOMAKE(parano, "0.3.3")
 
 m4_define(required_python_abi, 2.3)
 m4_define(required_python_version, 2.3.3)
@@ -18,11 +18,10 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Gettext package])
 AM_GLIB_GNU_GETTEXT
 AC_PROG_INTLTOOL
 
-AM_PATH_PYTHON(required_python_abi, required_python_version)
-dnl AM_PATH_PYTHON_VERSION(required_python_abi, required_python_version)
+AM_PATH_PYTHON(required_python_version)
 
 dnl Check for correctly installed pygtk
-AC_MSG_CHECKING(for pygtk required_pygtk_version installed for python required_python_abi)
+AC_MSG_CHECKING(for pygtk required_pygtk_version installed)
 prog="
 import pygtk; pygtk.require('2.0')
 import gobject
