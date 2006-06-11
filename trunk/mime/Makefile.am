@@ -12,9 +12,3 @@ EXTRA_DIST = \
 	$(app_DATA) \
 	$(mime_DATA) \
 	$(mimexml_DATA)
-
-install-data-local: install-mimexmlDATA
-	update-mime-database $(datadir)/mime
-
-uninstall-local:
-	update-mime-database $(datadir)/mime

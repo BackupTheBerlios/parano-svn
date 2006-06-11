@@ -1,3 +1,7 @@
+2006-06-11  Gautier Portet <kassoulet gmail com>
+
+	* Autotools fixes (thanks Daniel).
+
 2006-05-11  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: Removed dialog "load or add to hashfile" when adding dropping hashfiles.

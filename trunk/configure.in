@@ -34,9 +34,12 @@ else
     AC_MSG_ERROR(required pygtk version not found)
 fi
 
+AC_SUBST(PACKAGE_VERSION)
+
 AC_OUTPUT(
         Makefile
         po/Makefile.in
         src/Makefile
+		src/parano
         mime/Makefile
         )
