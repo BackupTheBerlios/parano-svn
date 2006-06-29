@@ -1,3 +1,11 @@
+2006-06-29  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: "Remove" now will really remove files.
+
+2006-05-12  Gautier Portet <kassoulet gmail com>
+
+	* release 0.3.3
+
 2006-06-11  Gautier Portet <kassoulet gmail com>
 
 	* Autotools fixes (thanks Daniel).
