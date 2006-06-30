@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-12 19:40+0200\n"
+"POT-Creation-Date: 2006-06-30 18:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,103 +21,103 @@ msgstr ""
 msgid "skipping: '%s'"
 msgstr ""
 
-#: ../src/parano.py:189
+#: ../src/parano.py:192
 #, python-format
 msgid "Warning: cannot get size of file '%s'"
 msgstr ""
 
-#: ../src/parano.py:309
+#: ../src/parano.py:312
 #, python-format
 msgid "Cannot read file: '%s'"
 msgstr ""
 
-#: ../src/parano.py:312
+#: ../src/parano.py:315
 #, python-format
 msgid "Cannot access file: '%s'"
 msgstr ""
 
-#: ../src/parano.py:344
+#: ../src/parano.py:347
 msgid "Ready"
 msgstr ""
 
-#: ../src/parano.py:446
+#: ../src/parano.py:449
 msgid "Cannot save hashfile"
 msgstr ""
 
-#: ../src/parano.py:462
+#: ../src/parano.py:465
 msgid "Hashfile Saved"
 msgstr ""
 
-#: ../src/parano.py:494
+#: ../src/parano.py:497
 msgid "Untitled Hashfile (Unsaved)"
 msgstr ""
 
-#: ../src/parano.py:496
+#: ../src/parano.py:499
 msgid "Untitled Hashfile"
 msgstr ""
 
-#: ../src/parano.py:507
+#: ../src/parano.py:510
 #, python-format
 msgid "<i>%s (Paused)</i>"
 msgstr ""
 
-#: ../src/parano.py:508
+#: ../src/parano.py:511
 msgid "Paused"
 msgstr ""
 
-#: ../src/parano.py:552
+#: ../src/parano.py:555
 msgid "Hashing..."
 msgstr ""
 
-#: ../src/parano.py:591
+#: ../src/parano.py:594
 msgid "Canceling..."
 msgstr ""
 
-#: ../src/parano.py:595
+#: ../src/parano.py:598
 #, python-format
 msgid "Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>"
 msgstr ""
 
-#: ../src/parano.py:607
+#: ../src/parano.py:610
 #, python-format
 msgid "About %d:%02d minute(s) remaining"
 msgstr ""
 
-#: ../src/parano.py:609
+#: ../src/parano.py:612
 msgid "Less than one minute remaining"
 msgstr ""
 
-#: ../src/parano.py:618 ../src/parano.py:619
+#: ../src/parano.py:621 ../src/parano.py:622
 msgid "Hashing canceled!"
 msgstr ""
 
-#: ../src/parano.py:622
+#: ../src/parano.py:627
 #, python-format
-msgid "%d files verified and ok. (%.2f MiB)"
+msgid "%d files verified and ok. (%.2f MiB, at %.2f MiB/s)"
 msgstr ""
 
-#: ../src/parano.py:654
+#: ../src/parano.py:661
 #, python-format
 msgid "Warning: %d files are different!"
 msgstr ""
 
-#: ../src/parano.py:657 ../src/parano.py:882
+#: ../src/parano.py:664 ../src/parano.py:901
 msgid "Ready."
 msgstr ""
 
-#: ../src/parano.py:822
+#: ../src/parano.py:841
 msgid "Reading list of files..."
 msgstr ""
 
-#: ../src/parano.py:859
+#: ../src/parano.py:878
 msgid "Listing files...."
 msgstr ""
 
-#: ../src/parano.py:880
+#: ../src/parano.py:899
 msgid "Add Folder canceled."
 msgstr ""
 
-#: ../src/parano.py:1000
+#: ../src/parano.py:1023
 #, python-format
 msgid ""
 "<big><b>A programming error has been detected during the execution of %s %s."
@@ -126,7 +126,7 @@ msgid ""
 "<tt><small>%s</small></tt>"
 msgstr ""
 
-#: ../src/parano.py:1004
+#: ../src/parano.py:1027
 msgid "Bug Detected"
 msgstr ""
 

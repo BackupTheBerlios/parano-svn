@@ -1,3 +1,9 @@
+2006-06-30  Gautier Portet <kassoulet gmail com>
+
+	* parano.py: Reverted to old autotools scripts.
+	  All File Choosers default to previous used folder.
+	  Display hashing speed in status if succesful.
+
 2006-06-29  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: "Remove" now will really remove files.

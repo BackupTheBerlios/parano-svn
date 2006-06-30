@@ -3,6 +3,10 @@
 appdir = $(bindir)
 app_SCRIPTS = parano
 
+parano: parano.py
+	sed -e s!\@datadir\@!$(datadir)/parano! -e s!\@version\@!$(VERSION)! < $< > $@
+
+
 gladedir = $(datadir)/parano
 dist_glade_DATA = parano.png parano-icon.png parano.glade 
 
