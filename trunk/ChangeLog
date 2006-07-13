@@ -1,3 +1,7 @@
+2006-07-12  Gautier Portet <kassoulet gmail com>
+
+	* release 0.3.4
+
 2006-06-30  Gautier Portet <kassoulet gmail com>
 
 	* parano.py: Reverted to old autotools scripts.

@@ -8,15 +8,14 @@ todo
 	- generate sfv/md5 for this folder
 	- verify given sfv/md5
 
-OK - pause button
-OK - remove doesn't work
-OK - speed in status
 
-OK - save current folder
-- correct mime type installation
 
 done
 ====
+- correct mime type installation
+- pause button.
+- remove doesn't work.
+- save current folder.
 - make possible to launch parano with multiples hashfiles to check, merge the list.
   at saving, obviously we save to just one file...
   and the same with dropping files list
