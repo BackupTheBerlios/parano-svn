@@ -25,14 +25,13 @@
   <property name="focus_on_map">True</property>
   <property name="urgency_hint">False</property>
   <property name="enable_layout_config">True</property>
-  <signal name="destroy" handler="on_destroy" last_modification_time="Wed, 13 Oct 2004 16:51:49 GMT"/>
-  <signal name="delete_event" handler="on_delete_event" last_modification_time="Wed, 13 Oct 2004 16:51:58 GMT"/>
+  <signal name="destroy" handler="on_destroy"/>
+  <signal name="delete_event" handler="on_delete_event"/>
 
   <child internal-child="dock">
     <widget class="BonoboDock" id="bonobodock1">
       <property name="visible">True</property>
       <property name="allow_floating">True</property>
-
       <child>
 	<widget class="BonoboDockItem" id="bonobodockitem1">
 	  <property name="visible">True</property>
@@ -239,7 +238,7 @@
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
-		  <signal name="clicked" handler="on_new_hashfile_activate" last_modification_time="Wed, 13 Oct 2004 00:05:24 GMT"/>
+		  <signal name="clicked" handler="on_new_hashfile_activate"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -255,7 +254,7 @@
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
-		  <signal name="clicked" handler="on_load_hashfile_activate" last_modification_time="Tue, 12 Oct 2004 23:45:39 GMT"/>
+		  <signal name="clicked" handler="on_load_hashfile_activate"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -271,7 +270,7 @@
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
-		  <signal name="clicked" handler="on_save_hashfile_activate" last_modification_time="Wed, 13 Oct 2004 00:10:25 GMT"/>
+		  <signal name="clicked" handler="on_save_hashfile_activate"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -296,13 +295,13 @@
 		<widget class="GtkToolButton" id="toolbutton_addfile">
 		  <property name="visible">True</property>
 		  <property name="tooltip" translatable="yes">Add some files to current hashfile</property>
-		  <property name="label" translatable="yes">_Add File</property>
+		  <property name="label">_Add File</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-file</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
-		  <signal name="clicked" handler="on_addfile_activate" last_modification_time="Thu, 07 Oct 2004 16:07:54 GMT"/>
+		  <signal name="clicked" handler="on_addfile_activate"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -314,13 +313,13 @@
 		<widget class="GtkToolButton" id="toolbutton_addfolder">
 		  <property name="visible">True</property>
 		  <property name="tooltip" translatable="yes">Add all files and folders from selected folder to current hashfile</property>
-		  <property name="label" translatable="yes">Add Folde_r</property>
+		  <property name="label">Add Folde_r</property>
 		  <property name="use_underline">True</property>
 		  <property name="stock_id">gtk-directory</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
-		  <signal name="clicked" handler="on_addfolder_activate" last_modification_time="Thu, 07 Oct 2004 16:08:07 GMT"/>
+		  <signal name="clicked" handler="on_addfolder_activate"/>
 		</widget>
 		<packing>
 		  <property name="expand">False</property>
@@ -365,7 +364,7 @@
 		  <property name="fixed_height_mode">False</property>
 		  <property name="hover_selection">False</property>
 		  <property name="hover_expand">False</property>
-		  <signal name="drag_data_received" handler="on_filelist_drag_data_received" last_modification_time="Mon, 07 Feb 2005 23:13:53 GMT"/>
+		  <signal name="drag_data_received" handler="on_filelist_drag_data_received"/>
 		</widget>
 	      </child>
 	    </widget>
@@ -449,7 +448,7 @@
 		      <property name="use_stock">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
-		      <signal name="clicked" handler="on_button_cancel_clicked" last_modification_time="Sun, 05 Mar 2006 11:27:28 GMT"/>
+		      <signal name="clicked" handler="on_button_cancel_clicked"/>
 		    </widget>
 		    <packing>
 		      <property name="padding">0</property>
@@ -466,7 +465,7 @@
 		      <property name="use_underline">True</property>
 		      <property name="relief">GTK_RELIEF_NORMAL</property>
 		      <property name="focus_on_click">True</property>
-		      <signal name="clicked" handler="on_button_pause_clicked" last_modification_time="Sun, 05 Mar 2006 11:27:37 GMT"/>
+		      <signal name="clicked" handler="on_button_pause_clicked"/>
 		    </widget>
 		    <packing>
 		      <property name="padding">0</property>
@@ -590,8 +589,8 @@
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
   <property name="urgency_hint">False</property>
-  <signal name="file_activated" handler="on_filechooserdialog_addfile_file_activated" last_modification_time="Thu, 07 Oct 2004 22:07:38 GMT"/>
-  <signal name="close" handler="on_filechooserdialog_addfile_close" last_modification_time="Thu, 07 Oct 2004 22:07:43 GMT"/>
+  <signal name="file_activated" handler="on_filechooserdialog_addfile_file_activated"/>
+  <signal name="close" handler="on_filechooserdialog_addfile_close"/>
 
   <child internal-child="vbox">
     <widget class="GtkVBox" id="dialog-vbox1">
@@ -614,7 +613,7 @@
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
 	      <property name="focus_on_click">True</property>
 	      <property name="response_id">-6</property>
-	      <signal name="clicked" handler="on_button_cancelfile_clicked" last_modification_time="Thu, 07 Oct 2004 23:29:58 GMT"/>
+	      <signal name="clicked" handler="on_button_cancelfile_clicked"/>
 	    </widget>
 	  </child>
 
@@ -663,8 +662,8 @@
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
   <property name="urgency_hint">False</property>
-  <signal name="file_activated" handler="on_filechooserdialog_addfolder_file_activated" last_modification_time="Sat, 09 Oct 2004 15:44:58 GMT"/>
-  <signal name="close" handler="on_filechooserdialog_addfolder_close" last_modification_time="Sat, 09 Oct 2004 15:45:07 GMT"/>
+  <signal name="file_activated" handler="on_filechooserdialog_addfolder_file_activated"/>
+  <signal name="close" handler="on_filechooserdialog_addfolder_close"/>
 
   <child internal-child="vbox">
     <widget class="GtkVBox" id="dialog-vbox2">
@@ -906,9 +905,10 @@
   <property name="logo">parano.png</property>
   <property name="copyright">©2005-2006 Gautier Portet</property>
   <property name="comments" translatable="yes">GNOME HashFile Manager </property>
-  <property name="authors">Gautier Portet &lt;kassoulet@users.berlios.de&gt;</property>
+  <property name="authors">Gautier Portet &lt;kassoulet@users.berlios.de&gt;
+</property>
   <property name="translator_credits" translatable="yes">translator_credits</property>
-  <signal name="close" handler="gtk_widget_destroy" last_modification_time="Thu, 07 Oct 2004 02:00:10 GMT"/>
+  <signal name="close" handler="gtk_widget_destroy"/>
 </widget>
 
 <widget class="GtkDialog" id="dialog_save_before_closing__">

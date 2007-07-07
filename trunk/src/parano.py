@@ -331,7 +331,8 @@ class Parano:
 			except :
 				break
 			hasher.update(data)
-			self.progress_current_bytes=self.progress_current_bytes+BUFFER_SIZE
+			self.progress_current_bytes = self.progress_current_bytes+len(data) 
+			#BUFFER_SIZE
 
 		f.close()
 		return hasher.get_hash()
@@ -395,7 +396,7 @@ class Parano:
 		self.filename=uri
 		self.update_hashfile()
 		self.update_ui()
-		self.update_and_check_file_list()
+		#self.update_and_check_file_list()
 		return True
 
 	def get_relative_filename(self, uri, ref):
@@ -465,7 +466,8 @@ class Parano:
 		self.set_status(_("Hashfile Saved"))
 
 	def add_file(self, filename, displayed_name=None, hash=None):
-	
+
+		filename = vfs_clean_uri(filename)
 		info = gnomevfs.get_file_info(filename, gnomevfs.FILE_INFO_FIELDS_SIZE)
 
 		if info.type == gnomevfs.FILE_TYPE_REGULAR:
@@ -486,7 +488,7 @@ class Parano:
 
 	def update_ui(self):
 		self.update_title()
-		self.update_file_list()
+		#self.update_file_list()
 
 	def update_title(self):
 		
@@ -510,9 +512,8 @@ class Parano:
 			self.progresslabel.set_markup(_("<i>%s (Paused)</i>") % gobject.markup_escape_text(self.current_file))
 			self.progressbar.set_text(_("Paused"))
 
-	def thread_update_hash(self):
-	
-		for f in self.files:
+	def thread_update_hash(self, files):
+		for f in files:
 			if self.abort:
 				# cancel button pressed
 				break
@@ -521,7 +522,7 @@ class Parano:
 			self.current_file = os.path.basename(f.filename)
 			
 			f.real_hash = self.get_file_hash(f.filename)
-			self.progress_file=self.progress_file+1
+			self.progress_file += 1
 			
 			if not f.expected_hash:
 				# new file in md5
@@ -544,7 +545,7 @@ class Parano:
 						f.status = HASH_DIFFERENT
 
 		# stop progress
-		self.progress_total_bytes=0
+		self.running_threads -= 1
 
 
 	def update_hashfile(self):
@@ -587,20 +588,29 @@ class Parano:
 
 		start=time.time()
 		total = self.progress_total_bytes
-		thread.start_new_thread(self.thread_update_hash, ())
-		
-		while self.progress_total_bytes>0:
+
+		thread.start_new_thread(self.thread_update_hash, (self.files, ))
+	
+		self.running_threads = 1
+		while self.running_threads:
 			if self.abort:
 				self.progressbar.set_text(_("Canceling..."))
 				break
 			if not self.paused:
 				now=time.time()
-				self.progresslabel.set_markup(_("Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>") % (self.progress_file, self.progress_nbfiles, gobject.markup_escape_text(gnomevfs.unescape_string_for_display(self.current_file))))
-				fraction = float(self.progress_current_bytes) / float(self.progress_total_bytes)
-				fraction2= float(self.progress_file) / float(self.progress_nbfiles)
-				fraction = (fraction + fraction2) / 2.0
+				self.progresslabel.set_markup(
+					_("Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>") % 
+					(self.progress_file, self.progress_nbfiles, 
+					gobject.markup_escape_text(
+						gnomevfs.unescape_string_for_display(self.current_file))))
+				if self.progress_total_bytes:
+					fraction = float(self.progress_current_bytes) / float(self.progress_total_bytes)
+					fraction2= float(self.progress_file) / float(self.progress_nbfiles)
+					fraction = (fraction + fraction2) / 2.0
+				else:
+					fraction = 0
 				if fraction>1.0:
-					fraction=1.0
+					fraction = 1.0
 				self.progressbar.set_fraction(fraction)
 				if fraction>0.0:
 					remaining = int((now-start)/fraction-(now-start))
@@ -621,44 +631,69 @@ class Parano:
 			log(_("Hashing canceled!"))
 			self.set_status(_("Hashing canceled!"))
 		else:
-			self.update_and_check_file_list()
+			self.set_status(_("Updating file list..."), STATE_HASHING)
+			gtk_iteration()
 			size = total/(1024.0*1024.0) 
 			speed = size/(time.time()-start)
 			self.set_status(_("%d files verified and ok. (%.2f MiB, at %.2f MiB/s)") % (len(self.files), size, speed), STATE_CORRECT)
+			self.update_and_check_file_list()
 			log( "hashed %d file(s) at %.2f MiB/s" % (len(self.files), speed))
+
 
 		self.window_main.set_sensitive(True)
 		for w in sensitive_widgets:
 			self.window.get_widget(w).set_sensitive(True)
 
 	def update_file_list(self):  
+
 		self.liststore.clear()
 		changed, missing, error = 0,0,0
 
-		common = os.path.commonprefix([f.displayed_name for f in self.files])		
-		debug("update file list")
-
+		#common = os.path.commonprefix([f.displayed_name for f in self.files])		
+		debug("update file list: %d files" % len(self.files))
+		start = time.time()
 		# sort by status
 		self.files.sort(key=lambda x: x.status)
+		
+		self.filelist.set_model(None)
 
+		t = 0
 		for f in self.files:
 			iter = self.liststore.append()
 			f.tree_iter = iter
 			self.liststore.set(iter, COLUMN_FILE, f.displayed_name)
 			self.liststore.set(iter, COLUMN_ICON, icons[f.status])
 			self.liststore.set(iter, COLUMN_META, f)
+			
 			if f.status == HASH_DIFFERENT:
 				changed += 1
 			if f.status == HASH_MISSING:
 				missing += 1
 			if f.status == HASH_ERROR:
 				error += 1
+			t = t + 1
+			#if t>10:
+			#	t = 0
+			#	gtk_iteration()
+			#	self.progressbar.pulse()
+
+
+		debug("done! in %ss" % (time.time()-start))
+		self.filelist.set_model(self.liststore)
 		return changed, missing, error
 
 	def update_and_check_file_list(self):
 		changed, missing, error = self.update_file_list()
 		if changed or missing or error:
-			self.set_status(_("Warning: %d files are different!") % (changed+missing+error),STATE_CORRUPTED)
+			l = []
+			if changed:
+				l.append(_("%d file(s) modified") % changed)
+			if missing:
+				l.append(_("%d file(s) missing") % missing)
+			if error:
+				l.append(_("%d file(s) not readable") % error)
+			s = ", ".join(l)
+			self.set_status("Warning! %s." % s, STATE_CORRUPTED)
 		else:
 			if not self.files:
 				self.set_status(_("Ready."))
@@ -751,7 +786,7 @@ class Parano:
 				self.load_hashfile(uri)
 			self._recent_folder = dialog.get_current_folder()
 	
-		self.update_file_list()
+		#self.update_file_list()
 
 		
 	def on_save_hashfile_activate(self, widget):
@@ -844,12 +879,11 @@ class Parano:
 	
 		if not prefix:
 			prefix = os.path.commonprefix(files)
-			
+		
 		if prefix[-1] != "/":
-			prefix = prefix + "/"
-			
-		visible = 0
-		if prefix:
+			# warning: prefix is NOT the containing folder, so cut it. 
+			visible = prefix.rfind("/") + 1
+		else:	
 			visible = len(prefix)
 
 		for uri in files:
@@ -861,7 +895,7 @@ class Parano:
 	def add_folder(self, folder, prefix=None):
 		log("adding folder:", folder)
 		glade = os.path.join(DATADIR, "parano.glade")
-		self.progress_dialog = gtk.glade.XML(glade,"addfolder_progress")
+		#self.progress_dialog = gtk.glade.XML(glade,"addfolder_progress")
 		
 		events = { "on_button_cancel_clicked" : self.on_addfolder_cancel }
 		self.window.signal_autoconnect(events)
@@ -900,6 +934,7 @@ class Parano:
 		else:
 			self.set_status(_("Ready."))
 		progress.hide()	
+		self.update_file_list()
 
 	def on_remove_activate(self, widget):
 		
@@ -952,6 +987,7 @@ class Parano:
 
 		self.liststore = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING, gobject.TYPE_PYOBJECT)
 		filelist.set_model(self.liststore)
+		self.filelist = filelist
 
 		# status bar
 		self.statusbar = window.get_widget("statusbar")
@@ -1002,15 +1038,16 @@ class Parano:
 			if self.get_hashfile_format(filename):
 				log("HashFile detected, loading: '%s'" % filename)
 				self.load_hashfile(filename)
-			initial_files=[]
+				initial_files=[]
 		
 		for f in initial_files:
-			log("loading hashfile: %s" % f)
-			self.load_hashfile(f)
+			log("adding file: %s" % f)
+			self.add_file(f)
 			
 		self.update_title()
 		self.modified=False
-		self.update_file_list()
+		if initial_files:
+			self.update_file_list()
 
 	def main(self):
 		gtk.main()
@@ -1025,7 +1062,7 @@ def excepthook(type, value, tb):
 	dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, 
 		gtk.BUTTONS_OK, message)
 	dialog.set_title(_("Bug Detected"))
-	dialog.set_markup(message)
+	dialog.set_markup(message.replace(">", "&gt;").replace("<","&lt;"))
 	dialog.run()
 	dialog.hide()
 	sys.exit(1)
