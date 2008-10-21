@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Parano - GNOME HashFile Frontend
-# Copyright (C) 2005-2006 Gautier Portet < kassoulet users.berlios.de >
+# Copyright (C) 2005-2008 Gautier Portet < kassoulet users.berlios.de >
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -70,11 +70,17 @@ def vfs_clean_uri(uri):
 		gnomevfs.URI(uri)
 		gnomevfs.Handle(uri)
 	except : #gnomevfs.InvalidURIError:
-		# maybe a local path ?
-		local = os.path.abspath(uri)
-		if os.path.exists(local):
-			uri = gnomevfs.get_uri_from_local_path(local)
-		uri = gnomevfs.escape_host_and_path_string(uri)
+		try:
+			uri_ = uri.replace('%5C', '/')
+			gnomevfs.URI(uri_)
+			gnomevfs.Handle(uri_)
+			uri = uri_
+		except : #gnomevfs.InvalidURIError:
+			# maybe a local path ?
+			local = os.path.abspath(uri)
+			if os.path.exists(local):
+				uri = gnomevfs.get_uri_from_local_path(local)
+			uri = gnomevfs.escape_host_and_path_string(uri)
 	return uri
 
 def vfs_open(uri, mode="r"):
@@ -378,20 +384,18 @@ class Parano:
 		content = gnomevfs.read_entire_file(uri)
 		lines = content.split("\n")
 		list = self.format.read_file(lines)
-
 		root = os.path.dirname(uri)
 		
 		for hash, file in list:
 			absfile = os.path.join(root, file)
 			u = gnomevfs.escape_host_and_path_string(absfile)
 			files_to_add.append( (u, file, hash) )
-		
 		# reset hashfile
 		#self.new_hashfile()
 		
 		# do add the files to list
 		for f in files_to_add:
-			self.files.append(File(f[0], f[1], f[2]))
+			self.files.append(File(*f))
 		
 		self.filename=uri
 		self.update_hashfile()
@@ -528,7 +532,6 @@ class Parano:
 				# new file in md5
 				f.status = HASH_OK
 			else:	
-				#print self.current_file, f.real_hash, f.expected_hash
 				if f.real_hash.lower() == f.expected_hash.lower():
 					# matching md5
 					f.status = HASH_OK

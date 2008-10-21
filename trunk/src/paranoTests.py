@@ -99,7 +99,6 @@ class ParanoTestCases(unittest.TestCase):
 			self._setUp()
 			test(format)
 			self._tearDown()
-
 	def testSave(self):
 		self.callTest(self._testSave)
 
@@ -123,6 +122,35 @@ class ParanoTestCases(unittest.TestCase):
 		local = os.path.abspath("test/relative/test.sfv")
 		uri = gnomevfs.get_uri_from_local_path(local)
 		self.p.save_hashfile(uri)
+		self._tearDown()
+	
+	def testBackslash(self):
+		self._setUp()
+		for f in glob.glob( test_folder + "*"):
+			if os.path.isdir(f):
+				continue
+			local = os.path.abspath(f)
+			uri = gnomevfs.get_uri_from_local_path(local)
+			self.p.add_file(uri)
+		local = os.path.abspath("test/backslash.sfv")
+		uri = gnomevfs.get_uri_from_local_path(local)
+		self.p.save_hashfile(uri)
+		self._tearDown()
+		
+		f = open(local, 'r')
+		c = f.read().replace('/','\\')
+		f.close()
+		f = open(local, 'w')
+		f.write(c)
+		f.close()
+		
+		self._setUp()
+		self._load(uri)
+		changed, missing, error = self.p.update_file_list()
+
+		self.assert_( 
+			changed == 0 and missing == 0 and error == 0
+			, "")
 		self._tearDown()
 
 	def testGetRelative(self):
