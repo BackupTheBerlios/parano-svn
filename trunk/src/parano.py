@@ -71,7 +71,7 @@ def vfs_clean_uri(uri):
 		gnomevfs.Handle(uri)
 	except : #gnomevfs.InvalidURIError:
 		try:
-			uri_ = uri.replace('%5C', '/')
+			uri_ = uri.replace('%5C', '/') # convert backslashes
 			gnomevfs.URI(uri_)
 			gnomevfs.Handle(uri_)
 			uri = uri_
@@ -390,8 +390,6 @@ class Parano:
 			absfile = os.path.join(root, file)
 			u = gnomevfs.escape_host_and_path_string(absfile)
 			files_to_add.append( (u, file, hash) )
-		# reset hashfile
-		#self.new_hashfile()
 		
 		# do add the files to list
 		for f in files_to_add:
@@ -400,7 +398,6 @@ class Parano:
 		self.filename=uri
 		self.update_hashfile()
 		self.update_ui()
-		#self.update_and_check_file_list()
 		return True
 
 	def get_relative_filename(self, uri, ref):
@@ -492,7 +489,6 @@ class Parano:
 
 	def update_ui(self):
 		self.update_title()
-		#self.update_file_list()
 
 	def update_title(self):
 		
@@ -652,7 +648,6 @@ class Parano:
 		self.liststore.clear()
 		changed, missing, error = 0,0,0
 
-		#common = os.path.commonprefix([f.displayed_name for f in self.files])		
 		debug("update file list: %d files" % len(self.files))
 		start = time.time()
 		# sort by status
@@ -675,11 +670,6 @@ class Parano:
 			if f.status == HASH_ERROR:
 				error += 1
 			t = t + 1
-			#if t>10:
-			#	t = 0
-			#	gtk_iteration()
-			#	self.progressbar.pulse()
-
 
 		debug("done! in %ss" % (time.time()-start))
 		self.filelist.set_model(self.liststore)
@@ -788,9 +778,6 @@ class Parano:
 			for uri in dialog.get_uris():
 				self.load_hashfile(uri)
 			self._recent_folder = dialog.get_current_folder()
-	
-		#self.update_file_list()
-
 		
 	def on_save_hashfile_activate(self, widget):
 		# save_hashfile dialog
@@ -898,7 +885,6 @@ class Parano:
 	def add_folder(self, folder, prefix=None):
 		log("adding folder:", folder)
 		glade = os.path.join(DATADIR, "parano.glade")
-		#self.progress_dialog = gtk.glade.XML(glade,"addfolder_progress")
 		
 		events = { "on_button_cancel_clicked" : self.on_addfolder_cancel }
 		self.window.signal_autoconnect(events)

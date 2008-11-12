@@ -32,6 +32,7 @@
     <widget class="BonoboDock" id="bonobodock1">
       <property name="visible">True</property>
       <property name="allow_floating">True</property>
+
       <child>
 	<widget class="BonoboDockItem" id="bonobodockitem1">
 	  <property name="visible">True</property>
@@ -234,7 +235,7 @@
 		<widget class="GtkToolButton" id="toolbutton1">
 		  <property name="visible">True</property>
 		  <property name="tooltip" translatable="yes">New File</property>
-		  <property name="stock_id">gtk-new</property>
+		  <property name="stock_id">gtk-clear</property>
 		  <property name="visible_horizontal">True</property>
 		  <property name="visible_vertical">True</property>
 		  <property name="is_important">False</property>
@@ -570,6 +571,7 @@
 </widget>
 
 <widget class="GtkFileChooserDialog" id="filechooserdialog_addfile">
+  <property name="border_width">5</property>
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
   <property name="local_only">False</property>
@@ -643,6 +645,7 @@
 </widget>
 
 <widget class="GtkFileChooserDialog" id="filechooserdialog_addfolder">
+  <property name="border_width">5</property>
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER</property>
   <property name="local_only">False</property>
@@ -715,6 +718,7 @@
 </widget>
 
 <widget class="GtkFileChooserDialog" id="filechooserdialog_savehashfile">
+  <property name="border_width">5</property>
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_SAVE</property>
   <property name="local_only">False</property>
@@ -823,6 +827,7 @@
 </widget>
 
 <widget class="GtkFileChooserDialog" id="filechooserdialog_loadhashfile">
+  <property name="border_width">5</property>
   <property name="visible">True</property>
   <property name="action">GTK_FILE_CHOOSER_ACTION_OPEN</property>
   <property name="local_only">False</property>
@@ -903,7 +908,7 @@
   <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="focus_on_map">True</property>
   <property name="logo">parano.png</property>
-  <property name="copyright">©2005-2006 Gautier Portet</property>
+  <property name="copyright">©2005-2008 Gautier Portet</property>
   <property name="comments" translatable="yes">GNOME HashFile Manager </property>
   <property name="authors">Gautier Portet &lt;kassoulet@users.berlios.de&gt;
 </property>
