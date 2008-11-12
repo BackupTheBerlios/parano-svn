@@ -1,6 +1,7 @@
 2008-10-21  Gautier Portet <kassoulet gmail com>
 	* parano.py: Make sure that Parano can cope with
 	  backlashes in hashfiles. (fix #14705) (thanks José Francisco)
+	release 0.3.5
 
 2007-07-07  Gautier Portet <kassoulet gmail com>
 

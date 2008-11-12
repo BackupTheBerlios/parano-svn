@@ -11,3 +11,13 @@ DISTCLEANFILES = intltool-extract intltool-merge intltool-update
 
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = parano.desktop
+
+
+
+release: dist
+	svn -m "release $(VERSION)" copy . svn+ssh://kassoulet@svn.berlios.de/svnroot/repos/parano/tags/release-$(VERSION)
+	lftp -c "open ftp.berlios.de/incoming ; put parano-$(VERSION).tar.gz"
+
+
+
+
