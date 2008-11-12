@@ -1,0 +1,255 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-06-30 18:23+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/parano.py:101
+#, python-format
+msgid "skipping: '%s'"
+msgstr ""
+
+#: ../src/parano.py:192
+#, python-format
+msgid "Warning: cannot get size of file '%s'"
+msgstr ""
+
+#: ../src/parano.py:312
+#, python-format
+msgid "Cannot read file: '%s'"
+msgstr ""
+
+#: ../src/parano.py:315
+#, python-format
+msgid "Cannot access file: '%s'"
+msgstr ""
+
+#: ../src/parano.py:347
+msgid "Ready"
+msgstr ""
+
+#: ../src/parano.py:449
+msgid "Cannot save hashfile"
+msgstr ""
+
+#: ../src/parano.py:465
+msgid "Hashfile Saved"
+msgstr ""
+
+#: ../src/parano.py:497
+msgid "Untitled Hashfile (Unsaved)"
+msgstr ""
+
+#: ../src/parano.py:499
+msgid "Untitled Hashfile"
+msgstr ""
+
+#: ../src/parano.py:510
+#, python-format
+msgid "<i>%s (Paused)</i>"
+msgstr ""
+
+#: ../src/parano.py:511
+msgid "Paused"
+msgstr ""
+
+#: ../src/parano.py:555
+msgid "Hashing..."
+msgstr ""
+
+#: ../src/parano.py:594
+msgid "Canceling..."
+msgstr ""
+
+#: ../src/parano.py:598
+#, python-format
+msgid "Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>"
+msgstr ""
+
+#: ../src/parano.py:610
+#, python-format
+msgid "About %d:%02d minute(s) remaining"
+msgstr ""
+
+#: ../src/parano.py:612
+msgid "Less than one minute remaining"
+msgstr ""
+
+#: ../src/parano.py:621 ../src/parano.py:622
+msgid "Hashing canceled!"
+msgstr ""
+
+#: ../src/parano.py:627
+#, python-format
+msgid "%d files verified and ok. (%.2f MiB, at %.2f MiB/s)"
+msgstr ""
+
+#: ../src/parano.py:661
+#, python-format
+msgid "Warning: %d files are different!"
+msgstr ""
+
+#: ../src/parano.py:664 ../src/parano.py:901
+msgid "Ready."
+msgstr ""
+
+#: ../src/parano.py:841
+msgid "Reading list of files..."
+msgstr ""
+
+#: ../src/parano.py:878
+msgid "Listing files...."
+msgstr ""
+
+#: ../src/parano.py:899
+msgid "Add Folder canceled."
+msgstr ""
+
+#: ../src/parano.py:1023
+#, python-format
+msgid ""
+"<big><b>A programming error has been detected during the execution of %s %s."
+"</b></big>\n"
+"\n"
+"<tt><small>%s</small></tt>"
+msgstr ""
+
+#: ../src/parano.py:1027
+msgid "Bug Detected"
+msgstr ""
+
+#: ../src/parano.glade.h:1
+msgid ""
+"<big><b>Do you want to save changes ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+
+#: ../src/parano.glade.h:4
+msgid ""
+"<big><b>Overwrite file ?</b></big>\n"
+"\n"
+"The file already exists, do you want to replace it with the new one you are "
+"saving ?"
+msgstr ""
+
+#: ../src/parano.glade.h:7
+msgid ""
+"<big><b>Save changes before closing ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+
+#: ../src/parano.glade.h:10
+msgid "<i>You can use .md5, .sha1 or .sfv.</i>"
+msgstr ""
+
+#: ../src/parano.glade.h:11
+msgid "Add File(s)"
+msgstr ""
+
+#: ../src/parano.glade.h:12
+msgid "Add File..."
+msgstr ""
+
+#: ../src/parano.glade.h:13
+msgid "Add Folde_r"
+msgstr ""
+
+#: ../src/parano.glade.h:14
+msgid "Add Folder"
+msgstr ""
+
+#: ../src/parano.glade.h:15
+msgid "Add Folder..."
+msgstr ""
+
+#: ../src/parano.glade.h:16
+msgid "Add all files and folders from selected folder to current MD5 file"
+msgstr ""
+
+#: ../src/parano.glade.h:17
+msgid "Add all files and folders from selected folder to current hashfile"
+msgstr ""
+
+#: ../src/parano.glade.h:18
+msgid "Add some files to current MD5 file"
+msgstr ""
+
+#: ../src/parano.glade.h:19
+msgid "Add some files to current hashfile"
+msgstr ""
+
+#: ../src/parano.glade.h:20
+msgid ""
+"Do you want to add this file to the current hashfile or open and check it as "
+"a new hashfile?"
+msgstr ""
+
+#: ../src/parano.glade.h:21
+msgid "Don't save"
+msgstr ""
+
+#: ../src/parano.glade.h:22
+msgid "GNOME HashFile Manager "
+msgstr ""
+
+#: ../src/parano.glade.h:23
+msgid "Load Hash File"
+msgstr ""
+
+#: ../src/parano.glade.h:24
+msgid "New File"
+msgstr ""
+
+#: ../src/parano.glade.h:25
+msgid "Open File"
+msgstr ""
+
+#: ../src/parano.glade.h:26
+msgid "Parano"
+msgstr ""
+
+#: ../src/parano.glade.h:27
+msgid "Remove"
+msgstr ""
+
+#: ../src/parano.glade.h:28
+msgid "Replace"
+msgstr ""
+
+#: ../src/parano.glade.h:29
+msgid "Save File"
+msgstr ""
+
+#: ../src/parano.glade.h:30
+msgid "Save Hash File"
+msgstr ""
+
+#: ../src/parano.glade.h:31
+msgid "_Add File"
+msgstr ""
+
+#: ../src/parano.glade.h:32
+msgid "_New"
+msgstr ""
+
+#: ../src/parano.glade.h:33
+msgid "_Pause"
+msgstr ""
+
+#: ../src/parano.glade.h:34
+msgid "translator_credits"
+msgstr ""

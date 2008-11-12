@@ -1,0 +1,1 @@
+make > /dev/null && sudo make install > /dev/null && python -tt src/paranoTests.py $@
