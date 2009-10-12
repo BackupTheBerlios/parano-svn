@@ -1,0 +1,287 @@
+# translation of Parano.
+# Copyright (C) 2004 Gautier Portet
+# This file is distributed under the same license as the Parano package.
+#
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Parano\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-06-30 18:23+0200\n"
+"PO-Revision-Date: 2009-10-11 23:39+0200\n"
+"Last-Translator: Svetoslav Stefanov <lfu.project@gmail.com>\n"
+"Language-Team: Svetoslav Stefanov <lfu.project@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Bulgarian\n"
+"X-Poedit-Country: BULGARIA\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: ../src/parano.py:101
+#, python-format
+msgid "skipping: '%s'"
+msgstr "пропускане: '%s'"
+
+#: ../src/parano.py:192
+#, python-format
+msgid "Warning: cannot get size of file '%s'"
+msgstr "Внимание: не може да се получи големината на файла '%s'"
+
+#: ../src/parano.py:312
+#, python-format
+msgid "Cannot read file: '%s'"
+msgstr "Файлът не може да бъде прочетен: '%s'"
+
+#: ../src/parano.py:315
+#, python-format
+msgid "Cannot access file: '%s'"
+msgstr "Файлът не може да бъде достъпен: '%s'"
+
+#: ../src/parano.py:347
+msgid "Ready"
+msgstr "Готово"
+
+#: ../src/parano.py:449
+msgid "Cannot save hashfile"
+msgstr "Хеш файлът не може да бъде запазен"
+
+#: ../src/parano.py:465
+msgid "Hashfile Saved"
+msgstr "Хеш файлът е запазен"
+
+#: ../src/parano.py:497
+msgid "Untitled Hashfile (Unsaved)"
+msgstr "Хеш файл без име (Незапазен)"
+
+#: ../src/parano.py:499
+msgid "Untitled Hashfile"
+msgstr "Хеш файл без име"
+
+#: ../src/parano.py:510
+#, python-format
+msgid "<i>%s (Paused)</i>"
+msgstr "<i>%s (На пауза)</i>"
+
+#: ../src/parano.py:511
+msgid "Paused"
+msgstr "На пауза"
+
+#: ../src/parano.py:555
+msgid "Hashing..."
+msgstr "Хеширане..."
+
+#: ../src/parano.py:594
+msgid "Canceling..."
+msgstr "Отмяна…"
+
+#: ../src/parano.py:598
+#, python-format
+msgid "Hashing file <b>%d</b> of <b>%d</b>: <i>%s</i>"
+msgstr "Хеширане на файл <b>%d</b> от <b>%d</b>: <i>%s</i>"
+
+#: ../src/parano.py:610
+#, python-format
+msgid "About %d:%02d minute(s) remaining"
+msgstr "Остават около %d:%02d минути"
+
+#: ../src/parano.py:612
+msgid "Less than one minute remaining"
+msgstr "Остава по-малко от минута"
+
+#: ../src/parano.py:621
+#: ../src/parano.py:622
+msgid "Hashing canceled!"
+msgstr "Отменено хеширане!"
+
+#: ../src/parano.py:627
+#, python-format
+msgid "%d files verified and ok. (%.2f MiB, at %.2f MiB/s)"
+msgstr "%d файла са проверени и наред. (%.2f MiB, с %.2f MiB/s)"
+
+#: ../src/parano.py:661
+#, python-format
+msgid "Warning: %d files are different!"
+msgstr "Внимани: %d файла са различни !"
+
+#: ../src/parano.py:664
+#: ../src/parano.py:901
+msgid "Ready."
+msgstr "Готово."
+
+#: ../src/parano.py:841
+msgid "Reading list of files..."
+msgstr "Прочитане на списъка с файлове..."
+
+#: ../src/parano.py:878
+msgid "Listing files...."
+msgstr "Показване на файловете..."
+
+#: ../src/parano.py:899
+msgid "Add Folder canceled."
+msgstr "Добавянето на папка е отменено."
+
+#: ../src/parano.py:1023
+#, python-format
+msgid ""
+"<big><b>A programming error has been detected during the execution of %s %s.</b></big>\n"
+"\n"
+"<tt><small>%s</small></tt>"
+msgstr ""
+"<big><b>По време на изпълнението на %s %s беше засечена програмна грешка.</b></big>\n"
+"\n"
+"<tt><small>%s</small></tt>"
+
+#: ../src/parano.py:1027
+msgid "Bug Detected"
+msgstr "Засечена е грешка"
+
+#: ../src/parano.glade.h:1
+msgid ""
+"<big><b>Do you want to save changes ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+"<big><b>Желаете ли да запазите промените ?</b></big>\n"
+"\n"
+"Ако не го направите, те ще бъдат отхвърлени"
+
+#: ../src/parano.glade.h:4
+msgid ""
+"<big><b>Overwrite file ?</b></big>\n"
+"\n"
+"The file already exists, do you want to replace it with the new one you are saving ?"
+msgstr ""
+"<big><b>Презаписване на файла ?</b></big>\n"
+"\n"
+"Файлът вече съществува, желаете ли да го презапишете с новия, който запазвате ?"
+
+#: ../src/parano.glade.h:7
+msgid ""
+"<big><b>Save changes before closing ?</b></big>\n"
+"\n"
+"if you don't save, changes will be discarded"
+msgstr ""
+"<big><b>Да се запазят ли промените преди затваряне?</b></big>\n"
+"\n"
+"Ако не ги запазите, те ще бъдат загубени."
+
+#: ../src/parano.glade.h:10
+msgid "<i>You can use .md5, .sha1 or .sfv.</i>"
+msgstr "<i>Можете да използвате .md5, .sha1 или .sfv.</i>"
+
+#: ../src/parano.glade.h:11
+msgid "Add File(s)"
+msgstr "Добавяне на файл"
+
+#: ../src/parano.glade.h:12
+msgid "Add File..."
+msgstr "Добавяне на файл..."
+
+#: ../src/parano.glade.h:13
+msgid "Add Folde_r"
+msgstr "Добавяне на _папка"
+
+#: ../src/parano.glade.h:14
+msgid "Add Folder"
+msgstr "Добавяне на папка"
+
+#: ../src/parano.glade.h:15
+msgid "Add Folder..."
+msgstr "Добавяне на папка..."
+
+#: ../src/parano.glade.h:16
+msgid "Add all files and folders from selected folder to current MD5 file"
+msgstr "Добавяне на всички файлове "
+
+#: ../src/parano.glade.h:17
+msgid "Add all files and folders from selected folder to current hashfile"
+msgstr "Добавяне на всички файлове и папки от избраната папка към текущия хеш файл"
+
+#: ../src/parano.glade.h:18
+msgid "Add some files to current MD5 file"
+msgstr "Добавяне на файлове към текущия MD5 файл"
+
+#: ../src/parano.glade.h:19
+msgid "Add some files to current hashfile"
+msgstr "Добавяне на файлове към текущия хеш файл"
+
+#: ../src/parano.glade.h:20
+msgid "Do you want to add this file to the current hashfile or open and check it as a new hashfile?"
+msgstr "Желаете ли да добавите този файл към текущия хеш файл или да го отворите и проверите като нов хеш файл?"
+
+#: ../src/parano.glade.h:21
+msgid "Don't save"
+msgstr "Без запазване"
+
+#: ../src/parano.glade.h:22
+msgid "GNOME HashFile Manager "
+msgstr "Мениджър на хеш файлове за GNOME"
+
+#: ../src/parano.glade.h:23
+msgid "Load Hash File"
+msgstr "Зареждане на хеш файл"
+
+#: ../src/parano.glade.h:24
+msgid "New File"
+msgstr "Нов файл"
+
+#: ../src/parano.glade.h:25
+msgid "Open File"
+msgstr "Отваряне на файл"
+
+#: ../src/parano.glade.h:26
+msgid "Parano"
+msgstr "Parano"
+
+#: ../src/parano.glade.h:27
+msgid "Remove"
+msgstr "Премахване"
+
+#: ../src/parano.glade.h:28
+msgid "Replace"
+msgstr "Замяна"
+
+#: ../src/parano.glade.h:29
+msgid "Save File"
+msgstr "Запазване на файл"
+
+#: ../src/parano.glade.h:30
+msgid "Save Hash File"
+msgstr "Запазване на хеш файл"
+
+#: ../src/parano.glade.h:31
+msgid "_Add File"
+msgstr "_Добавяне на файл"
+
+#: ../src/parano.glade.h:32
+msgid "_New"
+msgstr "_Нов"
+
+#: ../src/parano.glade.h:33
+msgid "_Pause"
+msgstr "_Пауза"
+
+#: ../src/parano.glade.h:34
+msgid "translator_credits"
+msgstr ""
+
+#~ msgid ""
+#~ "Cannot read %s\n"
+#~ "It's maybe not a MD5 sum file"
+#~ msgstr ""
+#~ "Cannot read %s\n"
+#~ "It's maybe not a MD5 sum file"
+#~ msgid "%s (Unsaved)"
+#~ msgstr "%s (Unsaved)"
+#~ msgid "<b>%d / %d</b>"
+#~ msgstr "<b>%d / %d</b>"
+#~ msgid "Calculate hash automatically"
+#~ msgstr "Calculer les sommes de contrôles automatiquement"
+#~ msgid "<b>Files hashed:</b>"
+#~ msgstr "<b>Fichiers calculés:</b>"
+#~ msgid "<big><b>Adding Folder</b></big>"
+#~ msgstr "<big><b>Adding Folder</b></big>"
+#~ msgid "Refresh"
+#~ msgstr "Rafraïchîr"
+
